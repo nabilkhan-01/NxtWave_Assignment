@@ -54,6 +54,12 @@ describe('Scope Assessment Engine', () => {
     expect(result.classification).toBe('manageable');
     expect(result.heuristicScopeScore).toBeGreaterThanOrEqual(70);
     expect(result.detectedComplexityFactors.length).toBe(0);
+
+    const resumePairInput = 'Build a page where I paste one job description and one resume, then show the matching skills and missing skills.';
+    const resumeResult = assessScope(resumePairInput);
+    expect(resumeResult.classification).toBe('manageable');
+    expect(resumeResult.heuristicScopeScore).toBeGreaterThanOrEqual(70);
+    expect(resumeResult.detectedComplexityFactors.length).toBe(0);
   });
 
   it('is completely deterministic: identical inputs yield identical outputs', () => {

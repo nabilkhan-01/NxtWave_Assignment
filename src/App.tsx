@@ -1,7 +1,77 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
+import { PROJECT_PRESETS } from './data/presets';
+import { ProjectPreset, ScopeAssessmentResult } from './types';
+import { assessScope } from './logic/assessment';
+import { PresetSelector } from './components/PresetSelector';
+import { ProjectInput } from './components/ProjectInput';
+import { AssessmentResults } from './components/AssessmentResults';
 import './App.css';
 
 export const App: React.FC = () => {
+  // Initial state: starts with the first teaching preset preloaded for immediate exploration
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(PROJECT_PRESETS[0].id);
+  const [mode, setMode] = useState<'preset' | 'custom'>('preset');
+  const [projectDescription, setProjectDescription] = useState<string>(PROJECT_PRESETS[0].fullDescription);
+  const [assessmentResult, setAssessmentResult] = useState<ScopeAssessmentResult | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const inputSectionRef = useRef<HTMLDivElement>(null);
+  const resultsSectionRef = useRef<HTMLDivElement>(null);
+
+  const currentPreset = PROJECT_PRESETS.find((p) => p.id === selectedPresetId);
+
+  const handleSelectPreset = (preset: ProjectPreset) => {
+    setMode('preset');
+    setSelectedPresetId(preset.id);
+    setProjectDescription(preset.fullDescription);
+    setValidationError(null);
+  };
+
+  const handleSelectCustom = () => {
+    setMode('custom');
+    setSelectedPresetId(null);
+    setProjectDescription('');
+    setValidationError(null);
+    setTimeout(() => {
+      const textarea = document.getElementById('project-description');
+      if (textarea) textarea.focus();
+    }, 50);
+  };
+
+  const handleDescriptionChange = (newValue: string) => {
+    setProjectDescription(newValue);
+    if (validationError && newValue.trim().length >= 10) {
+      setValidationError(null);
+    }
+  };
+
+  const handleResetInput = () => {
+    setProjectDescription('');
+    setValidationError(null);
+  };
+
+  const handleAssessScope = () => {
+    const trimmed = projectDescription.trim();
+    if (trimmed.length < 10) {
+      setValidationError('Please provide at least 10 meaningful characters describing your project.');
+      return;
+    }
+
+    setValidationError(null);
+    const result = assessScope(trimmed);
+    setAssessmentResult(result);
+
+    setTimeout(() => {
+      resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
+  const handleEditIdea = () => {
+    inputSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const textarea = document.getElementById('project-description');
+    if (textarea) textarea.focus();
+  };
+
   return (
     <div className="workbench-shell">
       {/* Top Engineering Banner & Metadata Bar */}
@@ -37,41 +107,40 @@ export const App: React.FC = () => {
           </p>
         </section>
 
-        {/* Milestone 1 Shell Notice */}
-        <section className="workbench-status-panel">
-          <div className="status-header">
-            <div className="status-label-group">
-              <span className="status-dot"></span>
-              <span className="status-title">Workbench Shell Initialized</span>
-            </div>
-            <span className="status-mono-id">MILESTONE 1 VERIFIED</span>
+        {/* Preset Selector Section */}
+        <PresetSelector
+          presets={PROJECT_PRESETS}
+          selectedPresetId={selectedPresetId}
+          mode={mode}
+          onSelectPreset={handleSelectPreset}
+          onSelectCustom={handleSelectCustom}
+        />
+
+        {/* Project Description Input Section */}
+        <div ref={inputSectionRef}>
+          <ProjectInput
+            value={projectDescription}
+            mode={mode}
+            presetTitle={currentPreset?.title}
+            onChange={handleDescriptionChange}
+            onSubmit={handleAssessScope}
+            onReset={handleResetInput}
+            validationError={validationError}
+          />
+        </div>
+
+        {/* Results Worksheet Section */}
+        {assessmentResult && (
+          <div ref={resultsSectionRef} className="results-wrapper">
+            <AssessmentResults
+              result={assessmentResult}
+              onEditIdea={handleEditIdea}
+            />
           </div>
-          <div className="status-body">
-            <p>
-              ShipScope diagnostic engine foundation is set up with strict TypeScript, Vite, zero external bloat, and an editorial engineering-workbench visual system.
-            </p>
-            <div className="status-specs-grid">
-              <div className="spec-item">
-                <span className="spec-key">MODE</span>
-                <span className="spec-val">Deterministic Rule-based Diagnostic</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-key">STACK</span>
-                <span className="spec-val">React + TypeScript + Plain CSS</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-key">TARGET</span>
-                <span className="spec-val">Final-Year Engineering Students</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-key">PRIVACY</span>
-                <span className="spec-val">Client-Side Only (No Tracking/Keys)</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        )}
       </main>
 
+      {/* Footer */}
       <footer className="workbench-footer">
         <div className="container footer-container">
           <p className="footer-note">
