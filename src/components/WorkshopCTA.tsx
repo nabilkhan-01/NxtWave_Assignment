@@ -18,7 +18,8 @@ export const WorkshopCTA: React.FC<WorkshopCTAProps> = ({
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
 
   const shareUrl = buildShareUrl(window.location.href, attribution, 'copy');
-  const whatsappUrl = buildWhatsAppUrl(shareUrl, presetTitle);
+  const whatsappShareUrl = buildShareUrl(window.location.href, attribution, 'whatsapp');
+  const whatsappUrl = buildWhatsAppUrl(whatsappShareUrl, presetTitle);
 
   const handleSimulateRegistration = () => {
     setIsRegistered(true);

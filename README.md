@@ -127,12 +127,21 @@ Executes all 28 Vitest tests covering assessment heuristics, preset classificati
 npm run build
 npm run preview
 ```
-Compiles TypeScript and outputs the production bundle to `dist/`.
+Compiles TypeScript and outputs the optimized static production bundle to `dist/`.
+
+### Deployment Notes
+ShipScope is built as a zero-backend, pure client-side static web application with relative asset bundling. It can be deployed to any static host without server configuration:
+
+- **Vercel / Netlify:** Connect the GitHub repository `https://github.com/nabilkhan-01/NxtWave_Assignment.git`, set build command to `npm run build`, and output directory to `dist`.
+- **GitHub Pages:** Run `npm run build`, push `dist/` to the `gh-pages` branch, or configure GitHub Actions with `actions/deploy-pages`.
+- **Surge / S3:** Deploy the compiled `dist/` directory directly (`npx surge dist`).
 
 ---
 
 ## 7. Limitations & Stated Assumptions
 
 - **Heuristic Diagnostic:** ShipScope is an engineering planning tool. The rule-based scope indicator does **not** predict academic marks, viva outcomes, faculty approval, or hiring chances.
-- **No Remote AI Backend:** All parsing is deterministic and executes locally in the student's browser.
+- **No Remote AI Backend:** All parsing is deterministic and executes locally in the student's browser. No non-deterministic LLM APIs or cloud dependencies are involved.
 - **Simulation Disclaimer:** The growth campaign simulation is a hypothetical projection tool designed to demonstrate funnel mechanics; it does not represent live campus registrations or verified outcomes.
+- **Privacy & Data Security:** Zero personal data is requested or collected. User project drafts and specifications remain entirely local and are never logged, transmitted to external servers, or placed into sharing URLs.
+- **No Workshop Backend:** The workshop CTA (*"Simulate registration"*) is an explicit client-side prototype demonstration; no real workshop submissions are created, and no student contact information is gathered.
