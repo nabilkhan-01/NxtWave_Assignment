@@ -135,3 +135,4 @@ export function buildConnectorWhatsAppUrl(
   const message = buildConnectorMessage(variant, campaignUrl);
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
+

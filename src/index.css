@@ -84,14 +84,25 @@ a {
 
 /* Layout container */
 .container {
-  width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+  width: min(100% - 64px, 1360px);
+  margin-inline: auto;
+  padding: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1024px) {
   .container {
-    padding: 0 1rem;
+    width: min(100% - 48px, 1360px);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: min(100% - 32px, 1360px);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(100% - 24px, 1360px);
   }
 }

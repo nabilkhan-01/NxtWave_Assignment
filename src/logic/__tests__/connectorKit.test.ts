@@ -60,3 +60,4 @@ describe('Campus Connector Kit Logic', () => {
     expect(waUrl).toContain(encodeURIComponent(testUrl));
   });
 });
+

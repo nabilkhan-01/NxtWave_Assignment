@@ -8,8 +8,12 @@ import {
 } from '../logic/growthSimulator';
 import { GrowthSimulatorInputs } from '../types';
 
-export const GrowthSimulator: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface GrowthSimulatorProps {
+  standalone?: boolean;
+}
+
+export const GrowthSimulator: React.FC<GrowthSimulatorProps> = ({ standalone = false }) => {
+  const [isOpen, setIsOpen] = useState(standalone);
   const [activeScenarioId, setActiveScenarioId] = useState<string>('base');
   const [inputs, setInputs] = useState<GrowthSimulatorInputs>(DEFAULT_GROWTH_INPUTS);
 
@@ -31,32 +35,51 @@ export const GrowthSimulator: React.FC = () => {
   };
 
   return (
-    <section id="growth-model" className="section-simulator" aria-labelledby="simulator-heading">
-      <div className="simulator-toggle-wrapper">
-        <button
-          type="button"
-          className="simulator-accordion-trigger"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-expanded={isOpen}
-          aria-controls="growth-model-content"
-        >
-          <div className="accordion-title-group">
-            <span className="spec-indicator">SCENARIO PLANNER</span>
-            <h3 id="simulator-heading" className="simulator-main-title">
-              Explore the 7-day growth model
-            </h3>
-            <p className="simulator-subtitle">
-              Adjust the assumptions to see what would need to be true for the campaign to reach 500 registrations with a ₹2,000 budget.
-            </p>
+    <section id="growth-model" className={`section-simulator ${standalone ? 'is-standalone-page' : ''}`} aria-labelledby="simulator-heading">
+      {standalone ? (
+        <div className="campaign-page-hero">
+          <div className="header-meta-row">
+            <span className="spec-indicator">CAMPAIGN PLANNING INSTRUMENT</span>
+            <span className="badge-mono">7-DAY SPRINT MODEL</span>
           </div>
-          <div className="accordion-action">
-            <span className="simulator-disclaimer-pill">Hypothetical planning simulation — not live campaign data</span>
-            <span className="accordion-arrow" aria-hidden="true">{isOpen ? '▲ Collapse' : '▼ Expand model'}</span>
+          <h1 id="simulator-heading" className="campaign-headline">
+            What must be true to reach 500 registrations?
+          </h1>
+          <p className="campaign-subhead">
+            Stress-test reach, conversion, referral behavior, and budget assumptions before committing campaign resources.
+          </p>
+          <div className="campaign-trust-badge">
+            <span className="mono-badge">PLANNING MODEL</span>
+            <span>Hypothetical scenario simulator — not live telemetry or recorded campaign data.</span>
           </div>
-        </button>
-      </div>
+        </div>
+      ) : (
+        <div className="simulator-toggle-wrapper">
+          <button
+            type="button"
+            className="simulator-accordion-trigger"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-expanded={isOpen}
+            aria-controls="growth-model-content"
+          >
+            <div className="accordion-title-group">
+              <span className="spec-indicator">SCENARIO PLANNER</span>
+              <h3 id="simulator-heading" className="simulator-main-title">
+                Explore the 7-day growth model
+              </h3>
+              <p className="simulator-subtitle">
+                Adjust the assumptions to see what would need to be true for the campaign to reach 500 registrations with a ₹2,000 budget.
+              </p>
+            </div>
+            <div className="accordion-action">
+              <span className="simulator-disclaimer-pill">Hypothetical planning simulation — not live campaign data</span>
+              <span className="accordion-arrow" aria-hidden="true">{isOpen ? '▲ Collapse' : '▼ Expand model'}</span>
+            </div>
+          </button>
+        </div>
+      )}
 
-      {isOpen && (
+      {(isOpen || standalone) && (
         <div id="growth-model-content" className="simulator-body">
           {/* Quick Scenario Presets */}
           <div className="scenarios-bar">
