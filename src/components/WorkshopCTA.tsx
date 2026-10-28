@@ -64,7 +64,7 @@ export const WorkshopCTA: React.FC<WorkshopCTAProps> = ({
   };
 
   return (
-    <section className="results-section section-workshop" aria-labelledby="workshop-heading">
+    <section id="workshop" className="results-section section-workshop" aria-labelledby="workshop-heading">
       <div className="workshop-card">
         {/* Why this next? Context Bar */}
         <div className="workshop-context-bar">

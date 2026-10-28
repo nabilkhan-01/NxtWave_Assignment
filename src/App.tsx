@@ -3,9 +3,12 @@ import { PROJECT_PRESETS } from './data/presets';
 import { ProjectPreset, ScopeAssessmentResult } from './types';
 import { assessScope } from './logic/assessment';
 import { parseAttribution } from './logic/attribution';
+import { ReviewerWalkthrough } from './components/ReviewerWalkthrough';
 import { PresetSelector } from './components/PresetSelector';
 import { ProjectInput } from './components/ProjectInput';
 import { AssessmentResults } from './components/AssessmentResults';
+import { CampusConnectorKit } from './components/CampusConnectorKit';
+import { MessageExperimentLab } from './components/MessageExperimentLab';
 import { GrowthSimulator } from './components/GrowthSimulator';
 import './App.css';
 
@@ -79,6 +82,19 @@ export const App: React.FC = () => {
     if (textarea) textarea.focus();
   };
 
+  const handleNavigateToWorkshop = () => {
+    if (!assessmentResult) {
+      const trimmed = projectDescription.trim() || PROJECT_PRESETS[0].fullDescription;
+      setAssessmentResult(assessScope(trimmed));
+    }
+    setTimeout(() => {
+      const el = document.getElementById('workshop');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
+  };
+
   return (
     <div className="workbench-shell">
       {/* Top Engineering Banner & Metadata Bar */}
@@ -103,8 +119,11 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="container main-content">
+        {/* Evaluator Fast Navigation Loop */}
+        <ReviewerWalkthrough onNavigateToWorkshop={handleNavigateToWorkshop} />
+
         {/* Editorial Header Section */}
-        <section className="hero-section" aria-labelledby="hero-title">
+        <section id="diagnostic" className="hero-section" aria-labelledby="hero-title">
           <div className="hero-kicker">AI Capstone Scope Diagnostic</div>
           <h2 id="hero-title" className="hero-headline">
             Your capstone idea deserves a smaller first step.
@@ -147,6 +166,12 @@ export const App: React.FC = () => {
             />
           </div>
         )}
+
+        {/* Campus Connector Distribution Kit */}
+        <CampusConnectorKit />
+
+        {/* Message Experimentation Lab */}
+        <MessageExperimentLab />
 
         {/* 7-Day Growth Model Campaign Simulator (Collapsible Section) */}
         <GrowthSimulator />

@@ -31,7 +31,7 @@ export const GrowthSimulator: React.FC = () => {
   };
 
   return (
-    <section className="section-simulator" aria-labelledby="simulator-heading">
+    <section id="growth-model" className="section-simulator" aria-labelledby="simulator-heading">
       <div className="simulator-toggle-wrapper">
         <button
           type="button"

@@ -85,6 +85,11 @@ Estimated Cost per Registration = Budget / Estimated Total Registrations
 - **Days 5–6 (Concentrate Effort):** Reallocate attention toward high-performing engineering channels and refine messaging hooks.
 - **Day 7 (Final Push & Reconciliation):** Send final session reminders, tally unique registrations, and compute final cost per acquisition.
 
+### Campus Distribution & Experimentation Tools
+- **Campus Connector Kit:** Generates tailored, attribution-tagged WhatsApp broadcast messages for Class Representatives, coding clubs, placement communities, and peers. Automatically creates sanitized source slugs (`utm_source=<type>_<slug>`), preserves campaign parameters, and outputs one-click copyable messages and deep links (`wa.me/?text=...`).
+- **Message Experiment Lab:** Evaluates message hook divergence between *Variant A (Project Scope Hook)* and *Variant B (Build-First Hook)*. Accepts manual visit and registration entries, calculates true conversion rates, computes absolute rate gaps, and provides sample-size-aware decision guidance without claiming false statistical significance.
+- **Reviewer Walkthrough:** A compact, accessible top navigation bar (`#diagnostic` → `#workshop` → `#connector-kit` → `#experiment-lab` → `#growth-model`) enabling rapid evaluation of the full growth loop.
+
 ---
 
 ## 5. Technology Stack

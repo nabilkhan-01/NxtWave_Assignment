@@ -586,6 +586,103 @@ async function runQA() {
       logFail(28, 'Target missed', e);
     }
 
+    // SCENARIO 29: Reviewer Walkthrough navigation
+    try {
+      const linkCount = await evalExpr('document.querySelectorAll(".walkthrough-link").length');
+      const firstHref = await evalExpr('document.querySelectorAll(".walkthrough-link")[0].getAttribute("href")');
+      const connectorHref = await evalExpr('document.querySelectorAll(".walkthrough-link")[2].getAttribute("href")');
+      if (linkCount === 5 && firstHref === '#diagnostic' && connectorHref === '#connector-kit') {
+        logPass(29, 'Reviewer Walkthrough navigation', 'All 5 anchors rendered with direct jump targets');
+      } else {
+        throw new Error(`Walkthrough nav links mismatch: count=${linkCount}`);
+      }
+    } catch (e) {
+      logFail(29, 'Reviewer Walkthrough navigation', e);
+    }
+
+    // SCENARIO 30: Campus Connector Kit source selection and slug sanitization
+    try {
+      await evalExpr('document.querySelectorAll(".source-chip")[1].click()'); // Coding Club
+      await new Promise((r) => setTimeout(r, 100));
+      await evalExpr('window.__setReactInput("#connector-source-label", "IIT Bombay CSE")');
+      await new Promise((r) => setTimeout(r, 200));
+      const slugText = await evalExpr('document.querySelector(".slug-preview code")?.innerText');
+      const resolvedUrl = await evalExpr('document.querySelector(".url-code-text")?.innerText');
+      if (slugText?.includes('coding_club_iit-bombay-cse') && resolvedUrl?.includes('utm_source=coding_club_iit-bombay-cse')) {
+        logPass(30, 'Connector Kit slug sanitization', `Sanitized source: ${slugText}`);
+      } else {
+        throw new Error(`Connector Kit slug failed: slug=${slugText}, url=${resolvedUrl}`);
+      }
+    } catch (e) {
+      logFail(30, 'Connector Kit slug sanitization', e);
+    }
+
+    // SCENARIO 31: Campus Connector Kit message variant toggle and copy link
+    try {
+      await evalExpr('document.querySelectorAll(".variant-toggle-btn")[1].click()'); // Variant B
+      await new Promise((r) => setTimeout(r, 200));
+      const msgText = await evalExpr('document.querySelector(".message-text")?.innerText');
+      const resolvedUrl = await evalExpr('document.querySelector(".url-code-text")?.innerText');
+      const waDirectHref = await evalExpr('document.querySelector("a.btn-whatsapp-direct")?.getAttribute("href")');
+      if (
+        msgText?.includes('Stop collecting AI project ideas') &&
+        resolvedUrl?.includes('utm_content=build-first-hook') &&
+        waDirectHref?.startsWith('https://wa.me/?text=')
+      ) {
+        logPass(31, 'Connector Kit Variant B & WhatsApp deep link', 'Variant B text and wa.me deep link updated');
+      } else {
+        throw new Error('Variant B toggle or WhatsApp link generation failed');
+      }
+    } catch (e) {
+      logFail(31, 'Connector Kit Variant B & WhatsApp deep link', e);
+    }
+
+    // SCENARIO 32: Message Experiment Lab inputs and calculation
+    try {
+      await evalExpr('window.__setReactInput("#input-va-visits", "100")');
+      await evalExpr('window.__setReactInput("#input-va-reg", "28")'); // 28%
+      await evalExpr('window.__setReactInput("#input-vb-visits", "100")');
+      await evalExpr('window.__setReactInput("#input-vb-reg", "18")'); // 18%
+      await new Promise((r) => setTimeout(r, 200));
+      const crA = await evalExpr('document.querySelectorAll(".rate-value")[0]?.innerText');
+      const crB = await evalExpr('document.querySelectorAll(".rate-value")[1]?.innerText');
+      const leadingTag = await evalExpr('document.querySelector(".lead-tag")?.innerText');
+      const diffCode = await evalExpr('document.querySelectorAll(".analysis-value code")[0]?.innerText');
+      if (crA === '28.0%' && crB === '18.0%' && leadingTag?.includes('Variant A') && diffCode?.includes('10.0')) {
+        logPass(32, 'Message Experiment Lab evaluation', `A: ${crA}, B: ${crB}, Leading: ${leadingTag}, Diff: ${diffCode}`);
+      } else {
+        throw new Error(`Experiment Lab failed: crA=${crA}, crB=${crB}, leading=${leadingTag}, diff=${diffCode}`);
+      }
+    } catch (e) {
+      logFail(32, 'Message Experiment Lab evaluation', e);
+    }
+
+    // SCENARIO 33: Responsive mobile 375px overflow check
+    try {
+      await send('Emulation.setDeviceMetricsOverride', {
+        width: 375,
+        height: 812,
+        deviceScaleFactor: 2,
+        mobile: true
+      });
+      await new Promise((r) => setTimeout(r, 300));
+      const overflow = await evalExpr(`(() => {
+        return {
+          windowInnerWidth: window.innerWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          bodyScrollWidth: document.body.scrollWidth,
+          hasOverflow: document.documentElement.scrollWidth > window.innerWidth
+        };
+      })()`);
+      if (overflow && !overflow.hasOverflow && overflow.scrollWidth === 375) {
+        logPass(33, 'Mobile 375px responsive check', 'Zero horizontal overflow across all sections');
+      } else {
+        throw new Error(`Mobile overflow detected: ${JSON.stringify(overflow)}`);
+      }
+    } catch (e) {
+      logFail(33, 'Mobile 375px responsive check', e);
+    }
+
     // Credibility, Network, Privacy, and Accessibility Checks
     console.log('\n--- Auditing Credibility, Privacy & Network Activity ---');
     const unexpectedRequests = networkRequests.filter(
@@ -606,8 +703,8 @@ async function runQA() {
   console.log(`\n=====================================================`);
   console.log(`QA Summary: ${passedCount} / ${results.length} scenarios passed.`);
   console.log(`=====================================================`);
-  if (passedCount === 28) {
-    console.log('ALL 28 QA SCENARIOS PASSED WITH ZERO FAILURES.');
+  if (passedCount === results.length) {
+    console.log(`ALL ${results.length} QA SCENARIOS PASSED WITH ZERO FAILURES.`);
   } else {
     console.error(`FAILED SCENARIOS: ${results.filter((r) => r.status === 'FAIL').map((r) => r.scenario).join(', ')}`);
     process.exit(1);
