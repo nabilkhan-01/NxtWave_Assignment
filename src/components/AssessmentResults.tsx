@@ -49,6 +49,12 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
 
   const status = getStatusBadge();
 
+  // Separate overarching architectural signals (e.g. density, brevity, or clean focus)
+  // from rule-level factor items that are detailed in the cards below
+  const architecturalSignals = result.reasons.filter(
+    (reason) => !result.detectedComplexityFactors.some((factor) => reason.startsWith(`Detected ${factor.name}:`))
+  );
+
   return (
     <article className="results-worksheet" aria-labelledby="results-main-title">
       {/* 1. Header & Verdict Panel */}
@@ -63,9 +69,11 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
           <div className="scope-metric-box">
             <span className="metric-label">ESTIMATED FIT:</span>
             <span className="metric-fit-label"><code>{result.fitLabel}</code></span>
-            <span className="metric-subdetail">
-              (Rule-based score: {result.heuristicScopeScore}/100)
-            </span>
+            {!result.isUnderspecified && (
+              <span className="metric-subdetail">
+                (Rule-based score: {result.heuristicScopeScore}/100)
+              </span>
+            )}
           </div>
         </div>
 
@@ -106,14 +114,16 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
           </span>
         </div>
 
-        <div className="reasons-list">
-          {result.reasons.map((reason, idx) => (
-            <div key={idx} className="reason-item">
-              <span className="reason-bullet" aria-hidden="true">▸</span>
-              <p className="reason-text">{reason}</p>
-            </div>
-          ))}
-        </div>
+        {architecturalSignals.length > 0 && (
+          <div className="reasons-list">
+            {architecturalSignals.map((reason, idx) => (
+              <div key={idx} className="reason-item">
+                <span className="reason-bullet" aria-hidden="true">▸</span>
+                <p className="reason-text">{reason}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {result.detectedComplexityFactors.length > 0 && (
           <div className="complexity-grid">
