@@ -1,13 +1,19 @@
 import React from 'react';
 import { ScopeAssessmentResult } from '../types';
+import { AttributionParams } from '../logic/attribution';
+import { WorkshopCTA } from './WorkshopCTA';
 
 interface AssessmentResultsProps {
   result: ScopeAssessmentResult;
+  presetTitle?: string;
+  attribution: AttributionParams;
   onEditIdea: () => void;
 }
 
 export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
   result,
+  presetTitle,
+  attribution,
   onEditIdea
 }) => {
   const getStatusBadge = () => {
@@ -221,7 +227,13 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         </div>
       </section>
 
-      {/* 7. Methodology Boundaries & Assumptions */}
+      {/* 7. Workshop Next Step & Teammate Sharing */}
+      <WorkshopCTA
+        presetTitle={presetTitle}
+        attribution={attribution}
+      />
+
+      {/* 8. Methodology Boundaries & Assumptions */}
       <section className="results-section section-assumptions" aria-labelledby="assumptions-heading">
         <h5 id="assumptions-heading" className="assumptions-title">Assumptions & Methodology Boundaries</h5>
         <ul className="assumptions-list">

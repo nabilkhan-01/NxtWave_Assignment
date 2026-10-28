@@ -1030,7 +1030,233 @@
   color: var(--accent-primary);
 }
 
-/* 7. Assumptions & Methodology */
+/* 7. Workshop Section & Teammate Sharing */
+.section-workshop {
+  background-color: var(--bg-surface);
+  padding: 2rem;
+  border-bottom: 1px solid var(--border-fine);
+}
+
+.workshop-card {
+  border: 1px solid var(--border-fine);
+  border-radius: 2px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.workshop-context-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  padding: 0.875rem 1.25rem;
+  background: var(--bg-surface-subtle);
+  border-bottom: 1px solid var(--border-fine);
+  flex-wrap: wrap;
+}
+
+.workshop-connect-text {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.workshop-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+  padding: 1.5rem 1.25rem;
+}
+
+.workshop-badge-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.badge-free {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--status-manageable-text);
+  background: var(--status-manageable-bg);
+  border: 1px solid var(--status-manageable-border);
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+
+.badge-format {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-fine);
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+}
+
+.workshop-title {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.workshop-description {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.workshop-disclaimer-note {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.workshop-action-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #faf9f6;
+  border: 1px solid var(--border-fine);
+  border-radius: 2px;
+  padding: 1.25rem;
+}
+
+.btn-workshop {
+  width: 100%;
+  justify-content: center;
+}
+
+.action-hint {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  text-align: center;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+.registration-confirmed {
+  display: flex;
+  flex-direction: column;
+}
+
+.confirmed-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.confirmed-dot {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--status-manageable-text);
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.confirmed-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.confirmed-text {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+/* Sharing Bar */
+.sharing-bar {
+  border-top: 1px solid var(--border-fine);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #fbfbfa;
+}
+
+.sharing-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sharing-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+}
+
+.sharing-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.sharing-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  cursor: pointer;
+  background: #ffffff;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.share-btn:hover {
+  background: var(--bg-surface-subtle);
+  border-color: var(--text-main);
+}
+
+.share-btn-whatsapp {
+  color: #166534;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.share-btn-whatsapp:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.share-icon {
+  font-size: 0.8125rem;
+}
+
+/* 8. Assumptions & Methodology */
 .section-assumptions {
   background-color: var(--bg-surface-subtle);
   border-bottom: none;
@@ -1121,6 +1347,10 @@
     grid-template-columns: 1fr;
   }
 
+  .workshop-content-grid {
+    grid-template-columns: 1fr;
+  }
+
   .build-first-col {
     border-right: none;
     border-bottom: 1px solid var(--border-fine);
@@ -1177,6 +1407,21 @@
 
   .roadmap-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sharing-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sharing-actions-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .share-btn {
+    flex: 1;
+    justify-content: center;
   }
 
   .verdict-headline {

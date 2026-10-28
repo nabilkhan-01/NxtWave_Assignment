@@ -1,13 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { PROJECT_PRESETS } from './data/presets';
 import { ProjectPreset, ScopeAssessmentResult } from './types';
 import { assessScope } from './logic/assessment';
+import { parseAttribution } from './logic/attribution';
 import { PresetSelector } from './components/PresetSelector';
 import { ProjectInput } from './components/ProjectInput';
 import { AssessmentResults } from './components/AssessmentResults';
 import './App.css';
 
 export const App: React.FC = () => {
+  // Parse incoming UTM attribution on page load
+  const attribution = useMemo(() => {
+    return typeof window !== 'undefined' ? parseAttribution(window.location.search) : {};
+  }, []);
+
   // Initial state: starts with the first teaching preset preloaded for immediate exploration
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(PROJECT_PRESETS[0].id);
   const [mode, setMode] = useState<'preset' | 'custom'>('preset');
@@ -134,6 +140,8 @@ export const App: React.FC = () => {
           <div ref={resultsSectionRef} className="results-wrapper">
             <AssessmentResults
               result={assessmentResult}
+              presetTitle={currentPreset?.title}
+              attribution={attribution}
               onEditIdea={handleEditIdea}
             />
           </div>
