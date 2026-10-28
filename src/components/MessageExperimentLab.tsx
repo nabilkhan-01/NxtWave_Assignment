@@ -47,26 +47,42 @@ export const MessageExperimentLab: React.FC = () => {
     setIsUsingIllustrative(false);
   };
 
+  // Generate plain-language summary string for "Current signal"
+  const getSignalSentence = () => {
+    if (evaluation.crA === null || evaluation.crB === null) {
+      return 'Enter visits and registrations for both message angles to see comparison results.';
+    }
+
+    const diffPct = (evaluation.absoluteDiff! * 100).toFixed(1);
+
+    if (evaluation.leadingVariant === 'tied') {
+      return `Both message angles are performing equally at ${(evaluation.crA * 100).toFixed(1)}% conversion.`;
+    }
+
+    const leaderName = evaluation.leadingVariant === 'A' ? 'Project scope message (Variant A)' : 'Build-first message (Variant B)';
+    const sampleClause = evaluation.isSufficientEvidence
+      ? 'with enough data collected to support this direction.'
+      : 'but the sample is still too small to make a final decision.';
+
+    return `${leaderName} is currently leading by ${diffPct} percentage points, ${sampleClause}`;
+  };
+
   return (
-    <section id="experiment-lab" className="section-experiment-lab" aria-labelledby="experiment-lab-title">
+    <section id="compare-messages" className="section-compare-messages" aria-labelledby="compare-messages-title">
       <div className="section-header-box">
-        <div className="header-meta-row">
-          <span className="spec-indicator">CAMPAIGN EXPERIMENTATION</span>
-          <span className="badge-mono">MESSAGE OPTIMIZATION</span>
-        </div>
         <div className="title-with-actions">
           <div>
-            <h3 id="experiment-lab-title" className="section-title">
-              Message Experiment Lab
-            </h3>
+            <h2 id="compare-messages-title" className="section-title">
+              Which message performs better?
+            </h2>
             <p className="section-subtitle">
-              Model and evaluate A/B message variant performance once broadcast links generate inbound visits and signups.
+              Enter visits and registrations when campaign data becomes available.
             </p>
           </div>
           <div className="lab-controls-bar">
             {isUsingIllustrative ? (
-              <span className="illustrative-pill" title="These numbers are sample figures to illustrate calculation behavior">
-                Illustrative inputs — replace with observed campaign data
+              <span className="illustrative-pill" title="Sample numbers showing how calculations work">
+                Sample numbers shown
               </span>
             ) : (
               <button
@@ -74,7 +90,7 @@ export const MessageExperimentLab: React.FC = () => {
                 className="text-btn-secondary"
                 onClick={handleLoadIllustrative}
               >
-                Load illustrative numbers
+                Load sample numbers
               </button>
             )}
             <button
@@ -82,21 +98,22 @@ export const MessageExperimentLab: React.FC = () => {
               className="text-btn-secondary"
               onClick={handleClear}
             >
-              Clear inputs
+              Clear numbers
             </button>
           </div>
         </div>
       </div>
 
+      {/* Side-by-Side Comparison Grid */}
       <div className="experiment-grid">
-        {/* Variant A Column */}
+        {/* Variant A: Project Scope */}
         <div className="variant-card">
           <div className="variant-header-row">
             <div>
               <span className="variant-kicker">VARIANT A</span>
-              <h4 className="variant-title">{MESSAGE_VARIANTS['scope-hook'].name}</h4>
+              <h3 className="variant-title">Project scope message</h3>
             </div>
-            <span className="variant-focus-pill">{MESSAGE_VARIANTS['scope-hook'].hook}</span>
+            <span className="variant-focus-pill">Scope angle</span>
           </div>
 
           <p className="variant-excerpt">
@@ -106,7 +123,7 @@ export const MessageExperimentLab: React.FC = () => {
           <div className="variant-inputs-row">
             <div className="lab-field">
               <label htmlFor="input-va-visits" className="lab-field-label">
-                Visits <code>(clicks)</code>
+                Visits
               </label>
               <input
                 id="input-va-visits"
@@ -121,7 +138,7 @@ export const MessageExperimentLab: React.FC = () => {
 
             <div className="lab-field">
               <label htmlFor="input-va-reg" className="lab-field-label">
-                Registrations <code>(signups)</code>
+                Registrations
               </label>
               <input
                 id="input-va-reg"
@@ -136,21 +153,21 @@ export const MessageExperimentLab: React.FC = () => {
           </div>
 
           <div className="variant-rate-box">
-            <span className="rate-label">Conversion Rate (Reg / Visits):</span>
+            <span className="rate-label">Conversion Rate:</span>
             <span className="rate-value">
               {evaluation.crA !== null ? `${(evaluation.crA * 100).toFixed(1)}%` : '—'}
             </span>
           </div>
         </div>
 
-        {/* Variant B Column */}
+        {/* Variant B: Build First */}
         <div className="variant-card">
           <div className="variant-header-row">
             <div>
               <span className="variant-kicker">VARIANT B</span>
-              <h4 className="variant-title">{MESSAGE_VARIANTS['build-first-hook'].name}</h4>
+              <h3 className="variant-title">Build-first message</h3>
             </div>
-            <span className="variant-focus-pill">{MESSAGE_VARIANTS['build-first-hook'].hook}</span>
+            <span className="variant-focus-pill">Build angle</span>
           </div>
 
           <p className="variant-excerpt">
@@ -160,7 +177,7 @@ export const MessageExperimentLab: React.FC = () => {
           <div className="variant-inputs-row">
             <div className="lab-field">
               <label htmlFor="input-vb-visits" className="lab-field-label">
-                Visits <code>(clicks)</code>
+                Visits
               </label>
               <input
                 id="input-vb-visits"
@@ -175,7 +192,7 @@ export const MessageExperimentLab: React.FC = () => {
 
             <div className="lab-field">
               <label htmlFor="input-vb-reg" className="lab-field-label">
-                Registrations <code>(signups)</code>
+                Registrations
               </label>
               <input
                 id="input-vb-reg"
@@ -190,7 +207,7 @@ export const MessageExperimentLab: React.FC = () => {
           </div>
 
           <div className="variant-rate-box">
-            <span className="rate-label">Conversion Rate (Reg / Visits):</span>
+            <span className="rate-label">Conversion Rate:</span>
             <span className="rate-value">
               {evaluation.crB !== null ? `${(evaluation.crB * 100).toFixed(1)}%` : '—'}
             </span>
@@ -198,56 +215,12 @@ export const MessageExperimentLab: React.FC = () => {
         </div>
       </div>
 
-      {/* Comparison Summary & Decision Guidance */}
-      <div className="experiment-analysis-panel">
-        <div className="analysis-kpis-row">
-          <div className="analysis-kpi-block">
-            <span className="analysis-label">Current Leading Variant:</span>
-            <span className="analysis-value">
-              {evaluation.leadingVariant === 'A' ? (
-                <strong className="lead-tag lead-a">Variant A (Scope Hook)</strong>
-              ) : evaluation.leadingVariant === 'B' ? (
-                <strong className="lead-tag lead-b">Variant B (Build-First Hook)</strong>
-              ) : evaluation.leadingVariant === 'tied' ? (
-                <strong className="lead-tag lead-tied">Closely Aligned / Tied</strong>
-              ) : (
-                <span className="lead-tag lead-none">—</span>
-              )}
-            </span>
-          </div>
-
-          <div className="analysis-kpi-block">
-            <span className="analysis-label">Absolute Difference:</span>
-            <span className="analysis-value">
-              {evaluation.absoluteDiff !== null ? (
-                <code>+{(evaluation.absoluteDiff * 100).toFixed(1)} percentage points</code>
-              ) : (
-                '—'
-              )}
-            </span>
-          </div>
-
-          <div className="analysis-kpi-block">
-            <span className="analysis-label">Sample Evidence Status:</span>
-            <span className="analysis-value">
-              {evaluation.isSufficientEvidence ? (
-                <span className="evidence-pill evidence-sufficient">Adequate sample size (30+ each)</span>
-              ) : (
-                <span className="evidence-pill evidence-insufficient">Sample size too small (&lt;30 each)</span>
-              )}
-            </span>
-          </div>
-        </div>
-
-        <div className="decision-guidance-box">
-          <div className="guidance-head">
-            <span className="spec-indicator">DECISION GUIDANCE</span>
-            <p className="guidance-headline">{evaluation.guidanceText}</p>
-          </div>
-          <p className="guidance-body">{evaluation.recommendation}</p>
-        </div>
+      {/* Large Plain-Language Conclusion: Current Signal */}
+      <div className="current-signal-panel">
+        <span className="signal-kicker">CURRENT SIGNAL</span>
+        <p className="signal-sentence">{getSignalSentence()}</p>
+        <p className="signal-recommendation">{evaluation.recommendation}</p>
       </div>
     </section>
   );
 };
-

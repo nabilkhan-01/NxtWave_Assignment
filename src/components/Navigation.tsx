@@ -5,11 +5,11 @@ export const Navigation: React.FC = () => {
   const { currentRoute, navigate } = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks: Array<{ to: AppRoute; label: string; tag?: string }> = [
+  const navLinks: Array<{ to: AppRoute; label: string }> = [
     { to: '/', label: 'Home' },
     { to: '/diagnose', label: 'Diagnose' },
-    { to: '/growth', label: 'Growth Toolkit' },
-    { to: '/campaign', label: 'Campaign Model' }
+    { to: '/growth', label: 'Campus Distribution' },
+    { to: '/campaign', label: '500 Registration Plan' }
   ];
 
   const handleLinkClick = (to: AppRoute) => {
@@ -57,7 +57,7 @@ export const Navigation: React.FC = () => {
             className="btn-header-cta"
             onClick={() => handleLinkClick('/diagnose')}
           >
-            <span>Assess Project</span>
+            <span>Try ShipScope</span>
             <span className="cta-arrow" aria-hidden="true">→</span>
           </button>
 

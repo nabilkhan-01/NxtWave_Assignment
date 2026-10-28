@@ -49,29 +49,28 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
 
   const status = getStatusBadge();
 
-  // Separate overarching architectural signals (e.g. density, brevity, or clean focus)
-  // from rule-level factor items that are detailed in the cards below
+  // Separate overarching architectural signals from factor items
   const architecturalSignals = result.reasons.filter(
     (reason) => !result.detectedComplexityFactors.some((factor) => reason.startsWith(`Detected ${factor.name}:`))
   );
 
   return (
     <article className="results-worksheet" aria-labelledby="results-main-title">
-      {/* 1. Header & Verdict Panel */}
+      {/* 1. Full-Width Verdict Banner */}
       <div className={`verdict-banner ${status.summaryClass}`}>
         <div className="verdict-meta-bar">
           <div className="verdict-tag-group">
-            <span className="worksheet-label">DIAGNOSTIC VERDICT</span>
+            <span className="worksheet-label">RESULT</span>
             <span className={`status-pill ${status.tagClass}`}>
               {status.label}
             </span>
           </div>
           <div className="scope-metric-box">
-            <span className="metric-label">ESTIMATED FIT:</span>
+            <span className="metric-label">FIT:</span>
             <span className="metric-fit-label"><code>{result.fitLabel}</code></span>
             {!result.isUnderspecified && (
               <span className="metric-subdetail">
-                (Rule-based score: {result.heuristicScopeScore}/100)
+                ({result.heuristicScopeScore}/100)
               </span>
             )}
           </div>
@@ -84,12 +83,6 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
           <p className="verdict-explanation">
             {result.explanation}
           </p>
-          <div className="methodology-note">
-            <span className="mono-badge">NOTE</span>
-            <span>
-              Rule-based scope indicator reflects initial architecture complexity and feature breadth. It is an engineering scoping tool, not a prediction of academic grades, viva outcomes, or hiring probability.
-            </span>
-          </div>
         </div>
 
         <div className="verdict-actions-bar">
@@ -103,59 +96,15 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         </div>
       </div>
 
-      {/* Grid: Why & Complexity Factors */}
-      <section className="results-section section-reasons" aria-labelledby="reasons-heading">
-        <div className="section-title-bar">
-          <h4 id="reasons-heading" className="section-heading">
-            Why ShipScope reached this result
-          </h4>
-          <span className="section-meta-count">
-            {result.detectedComplexityFactors.length} complexity factor{result.detectedComplexityFactors.length === 1 ? '' : 's'} identified
-          </span>
-        </div>
-
-        {architecturalSignals.length > 0 && (
-          <div className="reasons-list">
-            {architecturalSignals.map((reason, idx) => (
-              <div key={idx} className="reason-item">
-                <span className="reason-bullet" aria-hidden="true">▸</span>
-                <p className="reason-text">{reason}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {result.detectedComplexityFactors.length > 0 && (
-          <div className="complexity-grid">
-            {result.detectedComplexityFactors.map((factor) => (
-              <div key={factor.id} className="factor-card">
-                <div className="factor-header">
-                  <span className="factor-category">{factor.category.toUpperCase()}</span>
-                  <span className={`factor-severity severity-${factor.severity}`}>
-                    {factor.severity} risk
-                  </span>
-                </div>
-                <h5 className="factor-name">{factor.name}</h5>
-                <p className="factor-desc">{factor.description}</p>
-                <div className="factor-pattern">
-                  <span className="pattern-label">Detected from:</span>
-                  <code>&ldquo;{factor.detectedPattern}&rdquo;</code>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Core Scoping Contrast: Build First vs Leave for Later */}
+      {/* 2. Wide 2-Column Comparison: Build First vs Leave for Later */}
       <div className="scoping-contrast-grid">
-        {/* 3. Build First */}
+        {/* Left: Build First */}
         <section className="contrast-column build-first-col" aria-labelledby="build-first-heading">
           <div className="column-header">
             <span className="col-indicator col-green" aria-hidden="true">■</span>
             <div>
-              <h4 id="build-first-heading" className="column-title">Build first (Essential V1)</h4>
-              <p className="column-subtitle">The smallest feature set that demonstrates your central use case.</p>
+              <h4 id="build-first-heading" className="column-title">Build first</h4>
+              <p className="column-subtitle">The smallest feature set that demonstrates your central idea.</p>
             </div>
           </div>
           <ul className="action-list">
@@ -168,19 +117,19 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
           </ul>
         </section>
 
-        {/* 4. Leave for Later */}
+        {/* Right: Leave for Later */}
         <section className="contrast-column leave-later-col" aria-labelledby="leave-later-heading">
           <div className="column-header">
             <span className="col-indicator col-neutral" aria-hidden="true">■</span>
             <div>
-              <h4 id="leave-later-heading" className="column-title">Leave for later (Defer beyond V1)</h4>
-              <p className="column-subtitle">Useful features whose complexity can be safely deferred.</p>
+              <h4 id="leave-later-heading" className="column-title">Leave for later</h4>
+              <p className="column-subtitle">Secondary features that should wait until version one works.</p>
             </div>
           </div>
           <ul className="action-list">
             {result.featuresToPostpone.map((feat, idx) => (
               <li key={idx} className="action-item postpone-item">
-                <span className="item-num">POSTPONE</span>
+                <span className="item-num">LATER</span>
                 <span className="item-text">{feat}</span>
               </li>
             ))}
@@ -188,15 +137,15 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         </section>
       </div>
 
-      {/* 5. A Productive First 60 Minutes */}
+      {/* 3. Your First 60 Minutes */}
       <section className="results-section section-roadmap" aria-labelledby="roadmap-heading">
         <div className="section-title-bar">
           <div>
             <h4 id="roadmap-heading" className="section-heading">
-              A productive first 60 minutes
+              Your first 60 minutes
             </h4>
             <p className="section-subtitle">
-              A realistic initial execution sequence to validate your project's core data flow before adding interface layers.
+              A clear execution sequence to validate your project before adding secondary layers.
             </p>
           </div>
           <span className="badge-mono">4 STEPS • 60 MIN</span>
@@ -219,43 +168,88 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         </div>
       </section>
 
-      {/* 6. How to Know It Works (Acceptance Test) */}
+      {/* 4. How to Know It Works (Acceptance Test) */}
       <section className="results-section section-test" aria-labelledby="test-heading">
         <div className="test-panel">
           <div className="test-header">
-            <span className="test-kicker">ACCEPTANCE TEST CRITERIA</span>
+            <span className="test-kicker">SUCCESS TEST</span>
             <h4 id="test-heading" className="test-title">
-              How to know your V1 works
+              How to know it works
             </h4>
           </div>
           <p className="test-body">
             {result.successTest}
           </p>
           <div className="test-rule-footer">
-            <code>RULE:</code> If this observable test succeeds, your proof of concept is valid and ready to present to your project advisor.
+            <code>TEST:</code> If this observable test succeeds, your first version works.
           </div>
         </div>
       </section>
 
-      {/* 7. Workshop Next Step & Teammate Sharing */}
+      {/* 5. Workshop Next Step & Teammate Sharing */}
       <WorkshopCTA
         presetTitle={presetTitle}
         attribution={attribution}
       />
 
-      {/* 8. Methodology Boundaries & Assumptions */}
-      <section className="results-section section-assumptions" aria-labelledby="assumptions-heading">
-        <h5 id="assumptions-heading" className="assumptions-title">Assumptions & Methodology Boundaries</h5>
-        <ul className="assumptions-list">
-          {result.assumptionsAndLimitations.map((item, idx) => (
-            <li key={idx} className="assumption-item">
-              <span className="bullet-sym">•</span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* 6. Secondary Disclosure: How this result was evaluated */}
+      {(architecturalSignals.length > 0 || result.detectedComplexityFactors.length > 0) && (
+        <details className="secondary-disclosure-details">
+          <summary className="disclosure-summary">
+            How this result was evaluated ({result.detectedComplexityFactors.length} technical factors checked)
+          </summary>
+          <div className="disclosure-content">
+            {architecturalSignals.length > 0 && (
+              <div className="reasons-list">
+                {architecturalSignals.map((reason, idx) => (
+                  <div key={idx} className="reason-item">
+                    <span className="reason-bullet" aria-hidden="true">▸</span>
+                    <p className="reason-text">{reason}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {result.detectedComplexityFactors.length > 0 && (
+              <div className="complexity-grid">
+                {result.detectedComplexityFactors.map((factor) => (
+                  <div key={factor.id} className="factor-card">
+                    <div className="factor-header">
+                      <span className="factor-category">{factor.category.toUpperCase()}</span>
+                      <span className={`factor-severity severity-${factor.severity}`}>
+                        {factor.severity} risk
+                      </span>
+                    </div>
+                    <h5 className="factor-name">{factor.name}</h5>
+                    <p className="factor-desc">{factor.description}</p>
+                    <div className="factor-pattern">
+                      <span className="pattern-label">Detected from:</span>
+                      <code>&ldquo;{factor.detectedPattern}&rdquo;</code>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </details>
+      )}
+
+      {/* 7. Secondary Disclosure: Methodology & Boundaries */}
+      <details className="secondary-disclosure-details">
+        <summary className="disclosure-summary">
+          Methodology & planning notes
+        </summary>
+        <div className="disclosure-content">
+          <ul className="assumptions-list">
+            {result.assumptionsAndLimitations.map((item, idx) => (
+              <li key={idx} className="assumption-item">
+                <span className="bullet-sym">•</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
     </article>
   );
 };
-

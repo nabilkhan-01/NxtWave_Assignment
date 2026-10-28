@@ -4,26 +4,32 @@ import { MessageExperimentLab } from '../components/MessageExperimentLab';
 
 export const GrowthToolkitPage: React.FC = () => {
   return (
-    <div className="page-growth-toolkit">
-      {/* Page Hero */}
-      <section className="toolkit-hero-section" aria-labelledby="toolkit-hero-title">
-        <div className="header-meta-row">
-          <span className="spec-indicator">DISTRIBUTION & EXPERIMENTATION</span>
-          <span className="badge-mono">ACQUISITION TOOLKIT</span>
+    <div className="page-shell page-campus-distribution">
+      {/* 1. Hero Section: Clean Purpose */}
+      <section className="page-section distribution-hero-section" aria-labelledby="distribution-hero-title">
+        <div className="page-inner">
+          <h1 id="distribution-hero-title" className="distribution-headline">
+            Turn student communities into measurable distribution.
+          </h1>
+          <p className="distribution-subhead">
+            Create trackable messages for class reps, coding clubs, placement communities, and peers — then compare which message gets more registrations.
+          </p>
         </div>
-        <h1 id="toolkit-hero-title" className="toolkit-headline">
-          Turn student communities into measurable distribution.
-        </h1>
-        <p className="toolkit-subhead">
-          Create trackable campus outreach messages, compare acquisition hooks, and decide which message deserves more distribution.
-        </p>
       </section>
 
-      {/* 1. Campus Connector Kit */}
-      <CampusConnectorKit />
+      {/* 2. Section 1: Create a campus message */}
+      <section className="page-section distribution-workspace-section">
+        <div className="page-inner">
+          <CampusConnectorKit />
+        </div>
+      </section>
 
-      {/* 2. Message Experiment Lab */}
-      <MessageExperimentLab />
+      {/* 3. Section 2: Which message performs better? */}
+      <section className="page-section distribution-comparison-section">
+        <div className="page-inner">
+          <MessageExperimentLab />
+        </div>
+      </section>
     </div>
   );
 };

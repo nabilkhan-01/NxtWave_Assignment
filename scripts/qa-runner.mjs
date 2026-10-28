@@ -49,7 +49,7 @@ async function waitForServer(url, timeoutMs = 10000) {
 
 async function runQA() {
   console.log('=====================================================');
-  console.log('    SHIPSCOPE MULTI-PAGE E2E BROWSER QA SUITE        ');
+  console.log('    SHIPSCOPE COMPREHENSION & MULTI-PAGE E2E QA      ');
   console.log('=====================================================');
   const server = await startStaticServer(4173);
 
@@ -98,52 +98,43 @@ async function runQA() {
         pending.get(data.id)(data.result);
         pending.delete(data.id);
       }
-      if (data.method === 'Runtime.consoleAPICalled') {
-        const text = data.params.args.map((a) => a.value || a.description).join(' ');
-        consoleLogs.push({ type: data.params.type, text });
+      if (data.method === 'Console.messageAdded') {
+        consoleLogs.push(data.params.message);
       }
       if (data.method === 'Network.requestWillBeSent') {
         networkRequests.push(data.params.request.url);
       }
     };
 
-    await new Promise((r) => (ws.onopen = r));
+    await new Promise((resolve) => (ws.onopen = resolve));
 
-    const send = (method, params = {}) =>
-      new Promise((resolve) => {
-        const reqId = id++;
-        pending.set(reqId, resolve);
-        ws.send(JSON.stringify({ id: reqId, method, params }));
+    const send = (method, params = {}) => {
+      const msgId = id++;
+      return new Promise((resolve) => {
+        pending.set(msgId, resolve);
+        ws.send(JSON.stringify({ id: msgId, method, params }));
       });
+    };
 
     await send('Page.enable');
-    await send('Runtime.enable');
     await send('Network.enable');
-
-    // Grant clipboard permissions in headless Chrome
-    try {
-      await send('Browser.grantPermissions', { permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'] });
-    } catch {
-      // ignore
-    }
+    await send('Console.enable');
 
     const evalExpr = async (expression) => {
       const res = await send('Runtime.evaluate', { expression, returnByValue: true });
       return res?.result?.value;
     };
 
-    // Helper for controlled React inputs
+    // Helper to simulate realistic user typing into React controlled inputs
     await evalExpr(`
-      window.__setReactInput = (selector, val) => {
+      window.__setReactInput = (selector, value) => {
         const el = document.querySelector(selector);
-        if (!el) return false;
-        const isTextarea = el.tagName.toLowerCase() === 'textarea';
-        const proto = isTextarea ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
-        const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
-        setter.call(el, val);
+        if (!el) throw new Error("Element not found: " + selector);
+        const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        const setVal = Object.getOwnPropertyDescriptor(proto, 'value').set;
+        setVal.call(el, value);
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
-        return true;
       };
     `);
 
@@ -191,29 +182,29 @@ async function runQA() {
       logFail(16, 'Incoming UTM attribution', e);
     }
 
-    // Home structure check
+    // Home structure check: 5-second comprehension
     try {
       const headline = await evalExpr('document.querySelector(".home-hero-headline")?.innerText');
-      const previewTitle = await evalExpr('document.querySelector(".preview-verdict-title")?.innerText');
-      const processSteps = await evalExpr('document.querySelectorAll(".process-step-item").length');
-      const moduleCards = await evalExpr('document.querySelectorAll(".module-card").length');
+      const previewBadge = await evalExpr('document.querySelector(".preview-tag-badge")?.innerText');
+      const pillarsCount = await evalExpr('document.querySelectorAll(".pillar-card").length');
+      const primaryCta = await evalExpr('document.querySelector(".btn-primary.btn-hero")?.innerText');
 
       if (
-        headline?.includes('Turn an ambitious AI project') &&
-        previewTitle?.includes('Scope Needs Narrowing') &&
-        processSteps === 4 &&
-        moduleCards === 3
+        headline?.includes('Turn a big AI project idea') &&
+        previewBadge?.includes('Manageable First Version') &&
+        pillarsCount === 3 &&
+        primaryCta?.includes('Try ShipScope')
       ) {
-        logPass(1, 'Homepage 10-second comprehension structure', 'Hero grid + preview + 4 process steps + 3 modules');
+        logPass(1, 'Homepage 5-second comprehension structure', 'Hero headline + clean preview + 3 pillars');
       } else {
-        throw new Error(`Home page elements missing: steps=${processSteps}, modules=${moduleCards}`);
+        throw new Error(`Home page elements missing: headline=${headline}, pillars=${pillarsCount}`);
       }
     } catch (e) {
       logFail(1, 'Homepage structure', e);
     }
 
     // Capture Home Desktop & Mobile screenshots
-    await captureView('page-home-desktop.png', 1440, 1000, false);
+    await captureView('page-home-desktop.png', 1440, 900, false);
     await captureView('page-home-mobile.png', 375, 812, true);
 
     const homeOverflow = await checkOverflow();
@@ -224,7 +215,7 @@ async function runQA() {
     }
 
     // Reset view to Desktop for navigation
-    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
 
     // =========================================================
     // 2. PAGE 2: DIAGNOSE (/diagnose)
@@ -247,14 +238,19 @@ async function runQA() {
       logFail(3, 'Route navigation & UTM preservation', e);
     }
 
-    // Verify 2-column layout before assessment
+    // Verify 2-column layout before assessment (What you'll get panel)
     try {
-      const sidebarTitle = await evalExpr('document.querySelector(".sidebar-title")?.innerText');
+      const pageTitle = await evalExpr('document.querySelector(".diagnose-headline")?.innerText');
+      const sidebarTitle = await evalExpr('document.querySelector(".sidebar-clean-title")?.innerText');
       const presetsCount = await evalExpr('document.querySelectorAll(".preset-card").length');
-      if (sidebarTitle?.includes('7 Architecture Complexity Layers') && presetsCount === 4) {
-        logPass(4, 'Diagnose workbench layout (pre-assessment)', '2-col layout with 7 complexity layer sidebar');
+      if (
+        pageTitle?.includes('Can your idea become a realistic first version?') &&
+        sidebarTitle?.includes('What you’ll get') &&
+        presetsCount === 4
+      ) {
+        logPass(4, 'Diagnose workbench layout (pre-assessment)', 'Headline question + What you\'ll get sidebar');
       } else {
-        throw new Error('Diagnose sidebar or presets missing');
+        throw new Error(`Diagnose elements mismatch: title=${pageTitle}, sidebar=${sidebarTitle}`);
       }
     } catch (e) {
       logFail(4, 'Diagnose workbench pre-assessment layout', e);
@@ -382,8 +378,11 @@ async function runQA() {
       await evalExpr('document.querySelector("button.btn-primary").click()');
       await new Promise((r) => setTimeout(r, 400));
       const verdict = await evalExpr('document.querySelector(".verdict-headline")?.innerText');
-      if (verdict?.includes('Needs Narrowing')) {
-        logPass(12, 'Course Notes Q&A preset assessment', verdict);
+      const buildFirstCol = await evalExpr('document.querySelector("#build-first-heading")?.innerText');
+      const leaveLaterCol = await evalExpr('document.querySelector("#leave-later-heading")?.innerText');
+
+      if (verdict?.includes('Needs Narrowing') && buildFirstCol?.includes('Build first') && leaveLaterCol?.includes('Leave for later')) {
+        logPass(12, 'Course Notes Q&A preset assessment', `${verdict} - 50/50 columns verified`);
       } else {
         throw new Error(`Preset verdict failed: ${verdict}`);
       }
@@ -414,17 +413,17 @@ async function runQA() {
       await evalExpr('document.querySelector("button.share-btn-copy")?.click()');
       await new Promise((r) => setTimeout(r, 200));
       const copyText = await evalExpr('document.querySelector("button.share-btn-copy")?.innerText');
-      if (waHref?.includes('utm_medium%3Dwhatsapp') && (copyText?.includes('Link copied') || copyText?.includes('Copy link'))) {
-        logPass(14, 'Peer sharing mechanisms', 'WhatsApp URL-encoded with utm_medium=whatsapp; Copy link active');
+      if (waHref?.includes('utm_medium%3Dwhatsapp') && (copyText?.includes('Link copied') || copyText?.includes('Copy'))) {
+        logPass(14, 'Peer sharing mechanisms', 'WhatsApp URL-encoded with utm_medium=whatsapp; Copy button active');
       } else {
-        throw new Error('Peer sharing failed');
+        throw new Error(`Peer sharing failed: waHref=${waHref}, copyText=${copyText}`);
       }
     } catch (e) {
       logFail(14, 'Peer sharing mechanisms', e);
     }
 
     // Capture Diagnose Desktop & Mobile screenshots
-    await captureView('page-diagnose-desktop.png', 1440, 1000, false);
+    await captureView('page-diagnose-desktop.png', 1440, 900, false);
     await captureView('page-diagnose-mobile.png', 375, 812, true);
 
     const diagOverflow = await checkOverflow();
@@ -435,56 +434,54 @@ async function runQA() {
     }
 
     // Reset view to Desktop for navigation
-    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
 
     // =========================================================
-    // 3. PAGE 3: GROWTH TOOLKIT (/growth)
+    // 3. PAGE 3: CAMPUS DISTRIBUTION (/growth)
     // =========================================================
-    console.log('\n--- Auditing Page 3: Growth Toolkit (/growth) ---');
+    console.log('\n--- Auditing Page 3: Campus Distribution (/growth) ---');
 
-    // Click Growth Toolkit in navbar
+    // Click Campus Distribution in navbar
     await evalExpr('document.querySelectorAll(".nav-link")[2]?.click()');
     await new Promise((r) => setTimeout(r, 400));
 
     // Verify route
     try {
       const currentUrl = await evalExpr('window.location.pathname');
-      const headline = await evalExpr('document.querySelector(".toolkit-headline")?.innerText');
+      const headline = await evalExpr('document.querySelector(".distribution-headline")?.innerText');
       if (currentUrl === '/growth' && headline?.includes('Turn student communities into measurable distribution')) {
-        logPass(17, 'Growth Toolkit page routing and hero', currentUrl);
+        logPass(17, 'Campus Distribution page routing and hero', currentUrl);
       } else {
-        throw new Error(`Growth Toolkit navigation failed: url=${currentUrl}`);
+        throw new Error(`Campus Distribution navigation failed: url=${currentUrl}`);
       }
     } catch (e) {
-      logFail(17, 'Growth Toolkit page routing', e);
+      logFail(17, 'Campus Distribution page routing', e);
     }
 
-    // Connector Kit testing
+    // Campus Message Creator testing
     try {
       await evalExpr('document.querySelectorAll(".source-chip")[1].click()'); // Coding Club
       await evalExpr('window.__setReactInput("#connector-source-label", "IIT Bombay CSE")');
-      await evalExpr('document.querySelectorAll(".variant-toggle-btn")[1].click()'); // Variant B
+      await evalExpr('document.querySelectorAll(".variant-toggle-btn")[1].click()'); // Build-first hook
       await new Promise((r) => setTimeout(r, 200));
 
-      const slug = await evalExpr('document.querySelector(".slug-preview code")?.innerText');
-      const resolvedUrl = await evalExpr('document.querySelector(".url-code-text")?.innerText');
-      const msgText = await evalExpr('document.querySelector(".message-text")?.innerText');
+      const resolvedUrl = await evalExpr('document.querySelector(".url-code-text")?.textContent');
+      const msgText = await evalExpr('document.querySelector(".message-text")?.textContent');
 
       if (
-        slug?.includes('coding_club_iit-bombay-cse') &&
         resolvedUrl?.includes('utm_source=coding_club_iit-bombay-cse') &&
         resolvedUrl?.includes('utm_content=build-first-hook') &&
         msgText?.includes('Stop collecting AI project ideas')
       ) {
-        logPass(18, 'Campus Connector Kit 2-column workspace', `Slug: ${slug}, Hook: Variant B`);
+        logPass(18, 'Campus message creator 2-column workspace', 'Tracking details in expandable, copy buttons active');
       } else {
-        throw new Error('Connector Kit parameter generation mismatch');
+        throw new Error(`Message generator mismatch: resolvedUrl=${resolvedUrl}, msgText=${msgText}`);
       }
     } catch (e) {
-      logFail(18, 'Campus Connector Kit workspace', e);
+      logFail(18, 'Campus message creator workspace', e);
     }
 
-    // Message Experiment Lab testing
+    // Message Comparison testing
     try {
       await evalExpr('window.__setReactInput("#input-va-visits", "100")');
       await evalExpr('window.__setReactInput("#input-va-reg", "28")'); // 28%
@@ -494,110 +491,110 @@ async function runQA() {
 
       const crA = await evalExpr('document.querySelectorAll(".rate-value")[0]?.innerText');
       const crB = await evalExpr('document.querySelectorAll(".rate-value")[1]?.innerText');
-      const leadTag = await evalExpr('document.querySelector(".lead-tag")?.innerText');
+      const signalText = await evalExpr('document.querySelector(".signal-sentence")?.innerText');
 
-      if (crA === '28.0%' && crB === '18.0%' && leadTag?.includes('Variant A')) {
-        logPass(19, 'Message Experiment Lab A/B evaluation', `A: ${crA}, B: ${crB}, Leader: ${leadTag}`);
+      if (crA === '28.0%' && crB === '18.0%' && signalText?.includes('Variant A')) {
+        logPass(19, 'Message performance comparison & Current signal', `A: ${crA}, B: ${crB}, Signal: ${signalText}`);
       } else {
-        throw new Error(`Experiment calculation failed: crA=${crA}, crB=${crB}`);
+        throw new Error(`Message comparison failed: crA=${crA}, crB=${crB}`);
       }
     } catch (e) {
-      logFail(19, 'Message Experiment Lab evaluation', e);
+      logFail(19, 'Message performance comparison', e);
     }
 
-    // Capture Growth Toolkit Desktop & Mobile screenshots
-    await captureView('page-growth-desktop.png', 1440, 1000, false);
+    // Capture Campus Distribution Desktop & Mobile screenshots
+    await captureView('page-growth-desktop.png', 1440, 900, false);
     await captureView('page-growth-mobile.png', 375, 812, true);
 
     const growthOverflow = await checkOverflow();
     if (!growthOverflow.hasOverflow) {
-      logPass(20, 'Growth Toolkit Mobile 375px zero-overflow', `Width: ${growthOverflow.scrollWidth}px`);
+      logPass(20, 'Campus Distribution Mobile 375px zero-overflow', `Width: ${growthOverflow.scrollWidth}px`);
     } else {
-      logFail(20, 'Growth Toolkit Mobile overflow', growthOverflow);
+      logFail(20, 'Campus Distribution Mobile overflow', growthOverflow);
     }
 
     // Reset view to Desktop for navigation
-    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
 
     // =========================================================
-    // 4. PAGE 4: CAMPAIGN MODEL (/campaign)
+    // 4. PAGE 4: 500 REGISTRATION PLAN (/campaign)
     // =========================================================
-    console.log('\n--- Auditing Page 4: Campaign Model (/campaign) ---');
+    console.log('\n--- Auditing Page 4: 500 Registration Plan (/campaign) ---');
 
-    // Click Campaign Model in navbar
+    // Click 500 Registration Plan in navbar
     await evalExpr('document.querySelectorAll(".nav-link")[3]?.click()');
     await new Promise((r) => setTimeout(r, 400));
 
-    // Verify route and standalone hero
+    // Verify route and top summary banner
     try {
       const currentUrl = await evalExpr('window.location.pathname');
       const headline = await evalExpr('document.querySelector(".campaign-headline")?.innerText');
-      const hasAccordion = await evalExpr('Boolean(document.querySelector(".simulator-accordion-trigger"))');
+      const hasSummaryBanner = await evalExpr('Boolean(document.querySelector(".large-scenario-summary-banner"))');
 
-      if (currentUrl === '/campaign' && headline?.includes('What must be true to reach 500 registrations?') && !hasAccordion) {
-        logPass(21, 'Campaign Model standalone page & hero', 'Standalone workspace (not buried in accordion)');
+      if (currentUrl === '/campaign' && headline?.includes('What must be true to reach 500 registrations?') && hasSummaryBanner) {
+        logPass(21, '500 Registration Plan hero & large summary banner', 'Prominent summary banner visible immediately');
       } else {
-        throw new Error(`Campaign page setup failed: url=${currentUrl}, hasAccordion=${hasAccordion}`);
+        throw new Error(`500 Registration Plan setup failed: url=${currentUrl}, banner=${hasSummaryBanner}`);
       }
     } catch (e) {
-      logFail(21, 'Campaign Model standalone page', e);
+      logFail(21, '500 Registration Plan hero & summary banner', e);
     }
 
     // Scenario testing: Conservative
     try {
       await evalExpr('document.querySelectorAll(".scenario-btn")[0].click()');
       await new Promise((r) => setTimeout(r, 200));
-      const total = await evalExpr('document.querySelector(".funnel-step.total-step .step-val.highlight")?.innerText');
-      const bottleneck = await evalExpr('document.querySelector(".guidance-title")?.innerText');
-      if (total === '12' && bottleneck?.includes('Distribution Bottleneck')) {
-        logPass(22, 'Campaign Model Conservative scenario', `Total: 12, Bottleneck: ${bottleneck}`);
+      const total = await evalExpr('document.querySelector(".plain-funnel-step.total-step .step-val.highlight")?.innerText');
+      const issue = await evalExpr('document.querySelector(".issue-text")?.innerText');
+      if (total === '12' && issue?.includes('Distribution Bottleneck')) {
+        logPass(22, 'Campaign Conservative scenario', `Total: 12, Issue: ${issue}`);
       } else {
         throw new Error(`Conservative scenario failed: total=${total}`);
       }
     } catch (e) {
-      logFail(22, 'Campaign Model Conservative scenario', e);
+      logFail(22, 'Campaign Conservative scenario', e);
     }
 
     // Scenario testing: Base
     try {
       await evalExpr('document.querySelectorAll(".scenario-btn")[1].click()');
       await new Promise((r) => setTimeout(r, 200));
-      const total = await evalExpr('document.querySelector(".funnel-step.total-step .step-val.highlight")?.innerText');
-      const gap = await evalExpr('document.querySelector(".status-gap")?.innerText');
-      if (total === '108' && gap?.includes('392')) {
-        logPass(23, 'Campaign Model Base scenario', `Total: 108, Gap: ${gap}`);
+      const total = await evalExpr('document.querySelector(".plain-funnel-step.total-step .step-val.highlight")?.innerText');
+      const bannerStat = await evalExpr('document.querySelectorAll(".stat-number")[0]?.innerText');
+      if (total === '108' && bannerStat === '108') {
+        logPass(23, 'Campaign Base scenario', `Total: 108, Banner Stat: ${bannerStat}`);
       } else {
         throw new Error(`Base scenario failed: total=${total}`);
       }
     } catch (e) {
-      logFail(23, 'Campaign Model Base scenario', e);
+      logFail(23, 'Campaign Base scenario', e);
     }
 
     // Scenario testing: Stretch
     try {
       await evalExpr('document.querySelectorAll(".scenario-btn")[2].click()');
       await new Promise((r) => setTimeout(r, 200));
-      const total = await evalExpr('document.querySelector(".funnel-step.total-step .step-val.highlight")?.innerText');
-      const badge = await evalExpr('document.querySelector(".status-met")?.innerText');
-      if (total === '804' && badge?.includes('Target Met')) {
-        logPass(24, 'Campaign Model Stretch scenario', `Total: 804, Badge: ${badge}`);
+      const total = await evalExpr('document.querySelector(".plain-funnel-step.total-step .step-val.highlight")?.innerText');
+      const pill = await evalExpr('document.querySelector(".summary-status-pill")?.innerText');
+      if (total === '804' && pill?.includes('Target Met')) {
+        logPass(24, 'Campaign Stretch scenario', `Total: 804, Status: ${pill}`);
       } else {
         throw new Error(`Stretch scenario failed: total=${total}`);
       }
     } catch (e) {
-      logFail(24, 'Campaign Model Stretch scenario', e);
+      logFail(24, 'Campaign Stretch scenario', e);
     }
 
     // Manual simulator edits
     try {
       await evalExpr('window.__setReactInput("#input-connectors", "20")');
       await new Promise((r) => setTimeout(r, 200));
-      const exposures = await evalExpr('document.querySelectorAll(".step-val")[0]?.innerText');
-      const isCustomActive = await evalExpr('document.querySelector(".scenario-custom-pill") !== null');
-      if (exposures === '15,000' && isCustomActive) {
-        logPass(25, 'Manual simulation parameters', 'Recalculates exposures to 15,000; switches to custom');
+      const exposures = await evalExpr('document.querySelectorAll(".plain-funnel-step .step-val")[0]?.innerText');
+      const scenarioName = await evalExpr('document.querySelector(".summary-scenario-name")?.innerText');
+      if (exposures === '15,000' && scenarioName === 'Custom scenario') {
+        logPass(25, 'Manual simulation parameters', 'Recalculates exposures to 15,000; switches to Custom scenario');
       } else {
-        throw new Error('Manual parameter update failed');
+        throw new Error(`Manual parameter update failed: exposures=${exposures}, name=${scenarioName}`);
       }
     } catch (e) {
       logFail(25, 'Manual simulation parameters', e);
@@ -607,15 +604,15 @@ async function runQA() {
     try {
       await evalExpr('window.__setReactInput("#input-connectors", "0")');
       await new Promise((r) => setTimeout(r, 100));
-      const zeroTotal = await evalExpr('document.querySelector(".funnel-step.total-step .step-val.highlight")?.innerText');
-      const cpr = await evalExpr('document.querySelector(".cpr-val")?.innerText');
+      const zeroTotal = await evalExpr('document.querySelector(".plain-funnel-step.total-step .step-val.highlight")?.innerText');
+      const cprStat = await evalExpr('document.querySelectorAll(".stat-number")[2]?.innerText');
 
       await evalExpr('window.__setReactInput("#input-connectors", "10")');
       await evalExpr('window.__setReactInput("#input-overlap", "100")');
       await new Promise((r) => setTimeout(r, 100));
-      const reach100 = await evalExpr('document.querySelectorAll(".step-val")[1]?.innerText');
+      const reach100 = await evalExpr('document.querySelectorAll(".plain-funnel-step .step-val")[1]?.innerText');
 
-      if (zeroTotal === '0' && cpr === '—' && reach100 === '0') {
+      if (zeroTotal === '0' && cprStat === '—' && reach100 === '0') {
         logPass(26, 'Simulator edge case stability (0 reg & 100% overlap)', 'Clean zero math, no NaN, no division crash');
       } else {
         throw new Error('Edge cases failed');
@@ -628,7 +625,7 @@ async function runQA() {
     try {
       const scheduleCards = await evalExpr('document.querySelectorAll(".schedule-card").length');
       if (scheduleCards === 4) {
-        logPass(27, '7-Day Sprint Execution Timeline', '4 horizontal phase blocks (Days 1-2, 3-4, 5-6, 7)');
+        logPass(27, '7-Day Sprint Execution Timeline', '4 phase cards (Days 1-2, 3-4, 5-6, 7)');
       } else {
         throw new Error(`Schedule cards count mismatch: ${scheduleCards}`);
       }
@@ -637,7 +634,7 @@ async function runQA() {
     }
 
     // Capture Campaign Model Desktop & Mobile screenshots
-    await captureView('page-campaign-desktop.png', 1440, 1000, false);
+    await captureView('page-campaign-desktop.png', 1440, 900, false);
     await captureView('page-campaign-mobile.png', 375, 812, true);
 
     const campOverflow = await checkOverflow();

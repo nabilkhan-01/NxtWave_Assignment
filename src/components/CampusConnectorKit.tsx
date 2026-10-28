@@ -3,7 +3,6 @@ import {
   ConnectorSourceType,
   MessageVariant,
   SOURCE_TYPES,
-  MESSAGE_VARIANTS,
   sanitizeSourceLabel,
   buildConnectorUrl,
   buildConnectorMessage,
@@ -82,30 +81,25 @@ export const CampusConnectorKit: React.FC = () => {
   };
 
   return (
-    <section id="connector-kit" className="section-connector-kit" aria-labelledby="connector-kit-title">
+    <section id="create-message" className="section-connector-kit" aria-labelledby="create-message-title">
       <div className="section-header-box">
-        <div className="header-meta-row">
-          <span className="spec-indicator">DISTRIBUTION TOOL</span>
-          <span className="badge-mono">CAMPUS OUTREACH</span>
-        </div>
-        <h3 id="connector-kit-title" className="section-title">
-          Campus Connector Kit
-        </h3>
+        <h2 id="create-message-title" className="section-title">
+          Create a campus message
+        </h2>
         <p className="section-subtitle">
-          Help Class Representatives, coding clubs, placement communities, and student leads distribute ShipScope through attribution-tagged WhatsApp broadcast messages.
+          Generate ready-to-share WhatsApp messages with built-in tracking for different student communities.
         </p>
       </div>
 
       <div className="connector-workbench-grid">
-        {/* Left Column: Parameter Configuration */}
+        {/* Left Column: Who is sharing, Campus/section, Message angle */}
         <div className="connector-config-col">
-          {/* Step 1: Source Type */}
+          {/* Who is sharing? */}
           <div className="config-block">
             <label className="config-label">
-              <span className="step-tag">1</span>
-              <span>Distribution Source Type</span>
+              <span>Who is sharing?</span>
             </label>
-            <div className="source-selector-grid" role="radiogroup" aria-label="Connector Source Type">
+            <div className="source-selector-grid" role="radiogroup" aria-label="Who is sharing">
               {SOURCE_TYPES.map((source) => {
                 const isSelected = sourceType === source.id;
                 return (
@@ -125,132 +119,117 @@ export const CampusConnectorKit: React.FC = () => {
             </div>
           </div>
 
-          {/* Step 2: Optional Campus / Source Label */}
+          {/* Campus / section */}
           <div className="config-block">
             <label htmlFor="connector-source-label" className="config-label">
-              <span className="step-tag">2</span>
-              <span>Optional Campus or Section Label</span>
-              <span className="config-optional">(helps distinguish channels in UTM data)</span>
+              <span>Campus / section</span>
+              <span className="config-optional">(optional)</span>
             </label>
-            <div className="input-with-slug">
-              <input
-                id="connector-source-label"
-                type="text"
-                value={sourceLabel}
-                onChange={(e) => setSourceLabel(e.target.value)}
-                placeholder="e.g. IIT Bombay CSE, Section B, Dev Club"
-                className="text-input-field"
-                maxLength={40}
-              />
-              <div className="slug-preview" aria-live="polite">
-                <span className="slug-label">Generated utm_source:</span>
-                <code>
-                  {sanitizedSlug
-                    ? `${SOURCE_TYPES.find((s) => s.id === sourceType)?.defaultSource}_${sanitizedSlug}`
-                    : SOURCE_TYPES.find((s) => s.id === sourceType)?.defaultSource}
-                </code>
-              </div>
-            </div>
+            <input
+              id="connector-source-label"
+              type="text"
+              value={sourceLabel}
+              onChange={(e) => setSourceLabel(e.target.value)}
+              placeholder="e.g. IIT Bombay CSE, Section B, Dev Club"
+              className="text-input-field"
+              maxLength={40}
+            />
           </div>
 
-          {/* Step 3: Message Variant */}
+          {/* Message angle */}
           <div className="config-block">
             <label className="config-label">
-              <span className="step-tag">3</span>
-              <span>Campaign Message Hook</span>
+              <span>Message angle</span>
             </label>
-            <div className="variant-toggle-row" role="radiogroup" aria-label="Message Hook Variant">
-              {(Object.keys(MESSAGE_VARIANTS) as MessageVariant[]).map((key) => {
-                const v = MESSAGE_VARIANTS[key];
-                const isSelected = variant === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    className={`variant-toggle-btn ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => setVariant(key)}
-                  >
-                    <span className="variant-pill">{v.tag}</span>
-                    <strong className="variant-name">{v.hook}</strong>
-                  </button>
-                );
-              })}
+            <div className="variant-toggle-row" role="radiogroup" aria-label="Message angle">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={variant === 'scope-hook'}
+                className={`variant-toggle-btn ${variant === 'scope-hook' ? 'is-selected' : ''}`}
+                onClick={() => setVariant('scope-hook')}
+              >
+                <strong className="variant-name">Project scope</strong>
+                <span className="variant-submeta">Focus on avoiding overscoping</span>
+              </button>
+
+              <button
+                type="button"
+                role="radio"
+                aria-checked={variant === 'build-first-hook'}
+                className={`variant-toggle-btn ${variant === 'build-first-hook' ? 'is-selected' : ''}`}
+                onClick={() => setVariant('build-first-hook')}
+              >
+                <strong className="variant-name">Build-first</strong>
+                <span className="variant-submeta">Focus on getting version one working</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Generated Output & Actions */}
+        {/* Right Column: Message preview & Actions */}
         <div className="connector-preview-col">
-          <div className="preview-card">
-            <div className="preview-top-bar">
-              <span className="preview-badge">WHATSAPP-READY MESSAGE</span>
-              <span className="preview-variant-tag">{MESSAGE_VARIANTS[variant].tag}</span>
+          <div className="preview-card-clean">
+            <div className="preview-header-clean">
+              <span className="preview-kicker">MESSAGE PREVIEW</span>
+              <span className="preview-tag-badge">WhatsApp</span>
             </div>
 
             <div className="message-box">
               <pre className="message-text">{messageText}</pre>
             </div>
 
-            {/* Tracked Link Details */}
-            <div className="tracked-url-card">
-              <span className="url-kicker">RESOLVED CAMPAIGN URL:</span>
-              <code className="url-code-text">{campaignUrl}</code>
-              <div className="utm-chips-row">
-                <span className="utm-chip">
-                  source: <code>{sanitizedSlug ? `${SOURCE_TYPES.find((s) => s.id === sourceType)?.defaultSource}_${sanitizedSlug}` : SOURCE_TYPES.find((s) => s.id === sourceType)?.defaultSource}</code>
-                </span>
-                <span className="utm-chip">medium: <code>whatsapp</code></span>
-                <span className="utm-chip">campaign: <code>shipscope-workshop</code></span>
-                <span className="utm-chip">content: <code>{variant}</code></span>
-              </div>
-            </div>
-
             {/* Action Buttons */}
             <div className="connector-actions-bar">
               <button
                 type="button"
-                className="btn-primary"
+                className="btn-primary btn-copy"
                 onClick={handleCopyMessage}
-                aria-label="Copy entire broadcast message"
+                aria-live="polite"
               >
-                <span className="btn-icon" aria-hidden="true">📋</span>
-                <span>{copyMsgStatus === 'copied' ? 'Message copied!' : copyMsgStatus === 'error' ? 'Copy failed' : 'Copy message'}</span>
+                <span>{copyMsgStatus === 'copied' ? '✓ Message Copied' : 'Copy Message'}</span>
               </button>
 
               <button
                 type="button"
-                className="btn-secondary"
+                className="btn-secondary btn-copy"
                 onClick={handleCopyLink}
-                aria-label="Copy tracked campaign URL"
+                aria-live="polite"
               >
-                <span className="btn-icon" aria-hidden="true">🔗</span>
-                <span>{copyLinkStatus === 'copied' ? 'Link copied!' : copyLinkStatus === 'error' ? 'Copy failed' : 'Copy tracked link'}</span>
+                <span>{copyLinkStatus === 'copied' ? '✓ Link Copied' : 'Copy Link'}</span>
               </button>
 
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-secondary btn-whatsapp-direct"
-                aria-label="Open message directly in WhatsApp"
+                className="btn-secondary btn-whatsapp"
+                aria-label="Open WhatsApp with pre-filled message"
               >
-                <span className="btn-icon" aria-hidden="true">💬</span>
-                <span>Open in WhatsApp</span>
+                <span>Open WhatsApp</span>
+                <span aria-hidden="true">↗</span>
               </a>
             </div>
 
-            <div className="connector-disclaimer">
-              <span className="mono-badge">NOTE</span>
-              <span>
-                Distribution instrument for student connectors. Generates client-side tracking parameters only; does not log recipients or collect personal phone numbers.
-              </span>
-            </div>
+            {/* Tracking details in a small expandable */}
+            <details className="secondary-disclosure-details tracking-disclosure">
+              <summary className="disclosure-summary">
+                Tracking details
+              </summary>
+              <div className="disclosure-content">
+                <p className="tracking-url-label">Generated campaign link:</p>
+                <code className="url-code-text">{campaignUrl}</code>
+                <div className="utm-chips-row">
+                  <span className="utm-chip">source: <code>{sanitizedSlug ? `${SOURCE_TYPES.find((s) => s.id === sourceType)?.defaultSource}_${sanitizedSlug}` : SOURCE_TYPES.find((s) => s.id === sourceType)?.defaultSource}</code></span>
+                  <span className="utm-chip">medium: <code>whatsapp</code></span>
+                  <span className="utm-chip">campaign: <code>shipscope-workshop</code></span>
+                  <span className="utm-chip">content: <code>{variant}</code></span>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
       </div>
     </section>
   );
 };
-

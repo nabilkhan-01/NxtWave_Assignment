@@ -34,3 +34,4 @@ describe('Router path normalization', () => {
     expect(normalizePath('')).toBe('/');
   });
 });
+
