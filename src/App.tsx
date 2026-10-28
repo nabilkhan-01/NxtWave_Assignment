@@ -6,6 +6,7 @@ import { parseAttribution } from './logic/attribution';
 import { PresetSelector } from './components/PresetSelector';
 import { ProjectInput } from './components/ProjectInput';
 import { AssessmentResults } from './components/AssessmentResults';
+import { GrowthSimulator } from './components/GrowthSimulator';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -146,6 +147,9 @@ export const App: React.FC = () => {
             />
           </div>
         )}
+
+        {/* 7-Day Growth Model Campaign Simulator (Collapsible Section) */}
+        <GrowthSimulator />
       </main>
 
       {/* Footer */}

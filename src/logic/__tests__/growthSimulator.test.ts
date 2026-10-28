@@ -1,25 +1,57 @@
 import { describe, it, expect } from 'vitest';
-import { calculateGrowthFunnel, DEFAULT_GROWTH_INPUTS } from '../growthSimulator';
+import {
+  calculateGrowthFunnel,
+  analyzeScenarioGuidance,
+  CAMPAIGN_SCENARIOS,
+  DEFAULT_GROWTH_INPUTS
+} from '../growthSimulator';
 
 describe('Growth Simulator Engine', () => {
-  it('calculates the baseline 7-day campaign funnel correctly', () => {
-    // connectors: 8, groupsPerConnector: 4, averageGroupSize: 120
-    // gross = 8 * 4 * 120 = 3840
-    // unique reach = 3840 * (1 - 0.25) = 2880
-    // visits = 2880 * 0.08 = 230.4 -> 230
-    // direct reg = 230 * 0.18 = 41.4 -> 41
-    // referral reg = 41 * 0.35 = 14.35 -> 14
-    // total = 41 + 14 = 55
+  it('calculates the base planning scenario funnel correctly', () => {
+    // connectors: 15, groups: 4, size: 120 -> gross: 7200
+    // unique reach: 7200 * (1 - 0.25) = 5400
+    // visits: 5400 * 0.08 = 432
+    // direct reg: 432 * 0.20 = 86.4 -> 86
+    // referral reg: 86 * 0.25 = 21.5 -> 22
+    // total: 86 + 22 = 108
     const result = calculateGrowthFunnel(DEFAULT_GROWTH_INPUTS);
-    expect(result.grossExposures).toBe(3840);
-    expect(result.estimatedUniqueReach).toBe(2880);
-    expect(result.estimatedVisits).toBe(230);
-    expect(result.estimatedDirectRegistrations).toBe(41);
-    expect(result.estimatedReferralRegistrations).toBe(14);
-    expect(result.estimatedTotalRegistrations).toBe(55);
-    expect(result.estimatedCostPerRegistration).toBeCloseTo(2000 / 55, 1);
-    expect(result.remainingGap).toBe(500 - 55);
+    expect(result.grossExposures).toBe(7200);
+    expect(result.estimatedUniqueReach).toBe(5400);
+    expect(result.estimatedVisits).toBe(432);
+    expect(result.estimatedDirectRegistrations).toBe(86);
+    expect(result.estimatedReferralRegistrations).toBe(22);
+    expect(result.estimatedTotalRegistrations).toBe(108);
+    expect(result.estimatedCostPerRegistration).toBeCloseTo(2000 / 108, 1);
+    expect(result.remainingGap).toBe(500 - 108);
     expect(result.targetMet).toBe(false);
+  });
+
+  it('correctly calculates the conservative scenario with large gap', () => {
+    const conservative = calculateGrowthFunnel(CAMPAIGN_SCENARIOS.conservative.inputs);
+    expect(conservative.grossExposures).toBe(2400);
+    expect(conservative.estimatedUniqueReach).toBe(1680);
+    expect(conservative.estimatedVisits).toBe(84);
+    expect(conservative.estimatedTotalRegistrations).toBeLessThan(30);
+    expect(conservative.remainingGap).toBeGreaterThan(450);
+    expect(conservative.targetMet).toBe(false);
+
+    // Guidance flags distribution bottleneck
+    const guidance = analyzeScenarioGuidance(CAMPAIGN_SCENARIOS.conservative.inputs, conservative);
+    expect(guidance.bottleneckTitle).toBe('Distribution Bottleneck');
+    expect(guidance.recommendation).toContain('Distribution is the bottleneck');
+  });
+
+  it('correctly calculates the stretch scenario where target is met', () => {
+    const stretch = calculateGrowthFunnel(CAMPAIGN_SCENARIOS.stretch.inputs);
+    expect(stretch.grossExposures).toBe(22500);
+    expect(stretch.estimatedUniqueReach).toBe(19125);
+    expect(stretch.estimatedTotalRegistrations).toBeGreaterThanOrEqual(500);
+    expect(stretch.targetMet).toBe(true);
+    expect(stretch.remainingGap).toBe(0);
+
+    const guidance = analyzeScenarioGuidance(CAMPAIGN_SCENARIOS.stretch.inputs, stretch);
+    expect(guidance.bottleneckTitle).toContain('Target Achievable');
+    expect(guidance.recommendation).toContain('assumptions still require real-world validation');
   });
 
   it('safely handles zero values without throwing errors or NaN', () => {
@@ -79,26 +111,6 @@ describe('Growth Simulator Engine', () => {
     expect(result.estimatedTotalRegistrations).toBe(result.estimatedDirectRegistrations);
   });
 
-  it('calculates target exceeded state correctly', () => {
-    const highVolume = calculateGrowthFunnel({
-      connectors: 25,
-      groupsPerConnector: 8,
-      averageGroupSize: 200,
-      overlapRate: 0.1,
-      visitRate: 0.15,
-      registrationConversionRate: 0.25,
-      referralK: 0.5,
-      budget: 2000,
-      registrationTarget: 500
-    });
-
-    expect(highVolume.estimatedTotalRegistrations).toBeGreaterThanOrEqual(500);
-    expect(highVolume.remainingGap).toBe(0);
-    expect(highVolume.targetMet).toBe(true);
-    expect(highVolume.progressPercentage).toBe(100);
-    expect(highVolume.estimatedCostPerRegistration).toBeLessThan(4.0);
-  });
-
   it('clamps out-of-bound percentages and records warnings', () => {
     const clampedResult = calculateGrowthFunnel({
       ...DEFAULT_GROWTH_INPUTS,
@@ -110,5 +122,26 @@ describe('Growth Simulator Engine', () => {
     expect(clampedResult.warnings.length).toBeGreaterThanOrEqual(3);
     expect(clampedResult.estimatedUniqueReach).toBe(0); // 100% overlap
     expect(clampedResult.estimatedVisits).toBe(0); // 0% visit rate
+  });
+
+  it('analyzes different bottleneck stages deterministically', () => {
+    // Low visit rate test
+    const lowVisitInputs = {
+      ...DEFAULT_GROWTH_INPUTS,
+      visitRate: 0.03
+    };
+    const lowVisitOutputs = calculateGrowthFunnel(lowVisitInputs);
+    const lowVisitGuidance = analyzeScenarioGuidance(lowVisitInputs, lowVisitOutputs);
+    expect(lowVisitGuidance.bottleneckTitle).toBe('Invitation-to-Visit Bottleneck');
+
+    // Low conversion test
+    const lowConvInputs = {
+      ...DEFAULT_GROWTH_INPUTS,
+      visitRate: 0.10,
+      registrationConversionRate: 0.08
+    };
+    const lowConvOutputs = calculateGrowthFunnel(lowConvInputs);
+    const lowConvGuidance = analyzeScenarioGuidance(lowConvInputs, lowConvOutputs);
+    expect(lowConvGuidance.bottleneckTitle).toBe('Registration Conversion Bottleneck');
   });
 });

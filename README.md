@@ -4,6 +4,8 @@
 
 ShipScope is a deterministic, rule-based diagnostic application built for final-year engineering students. It evaluates capstone project specifications, identifies high-risk architecture layers, isolates the essential Version 1 feature set, outlines features to postpone, and provides an observable acceptance test paired with a realistic first-60-minute execution roadmap.
 
+It also includes an interactive growth planning instrument modeling a hypothetical 7-day campaign to reach 500 workshop registrations with a ₹2,000 budget.
+
 ---
 
 ## 1. Overview & Core Philosophy
@@ -53,8 +55,9 @@ The diagnostic engine ([`src/logic/assessment.ts`](src/logic/assessment.ts)) eva
 
 ## 4. Growth Simulator Model (Hypothetical Campaign)
 
-ShipScope includes an independent growth calculation engine ([`src/logic/growthSimulator.ts`](src/logic/growthSimulator.ts)) modeling a hypothetical 7-day campus outreach campaign (₹2,000 budget, 500 registration target):
+ShipScope includes an interactive scenario simulator ([`src/components/GrowthSimulator.tsx`](src/components/GrowthSimulator.tsx) and [`src/logic/growthSimulator.ts`](src/logic/growthSimulator.ts)) modeling a hypothetical 7-day campus outreach campaign (₹2,000 budget, 500 registration target):
 
+### Pure Funnel Formulas
 ```text
 Gross Exposures = Connectors × Groups per Connector × Average Group Size
 Estimated Unique Reach = Gross Exposures × (1 - Overlap Rate)
@@ -66,6 +69,21 @@ Estimated Cost per Registration = Budget / Estimated Total Registrations
 ```
 
 *Note: $K$ represents estimated incremental unique referral registrations per direct registration. All campaign metrics are explicit mathematical estimates for planning purposes, not measured live data.*
+
+### Planning Scenarios
+1. **Conservative Assumptions:** Low connector count and cautious conversion (8 connectors, 3 groups, 100 students, 30% overlap, 5% visit rate, 12% reg rate, $K=0.15$) $\rightarrow$ ~12 registrations, flags distribution bottleneck.
+2. **Base Planning Assumptions:** Realistic middle-ground planning model (15 connectors, 4 groups, 120 students, 25% overlap, 8% visit rate, 20% reg rate, $K=0.25$) $\rightarrow$ 108 registrations, ₹18.52 CPR, highlights remaining gap to 500.
+3. **Stretch Assumptions:** High-engagement model required to approach or exceed target (30 connectors, 5 groups, 150 students, 15% overlap, 12% visit rate, 25% reg rate, $K=0.40$) $\rightarrow$ 804 registrations, target met.
+
+### Decision Guidance & Sensitivity Logic
+- Identifies current primary constraints dynamically (Distribution Bottleneck, Invitation-to-Visit Bottleneck, Conversion Bottleneck, or Weak Peer Multiplier).
+- Surfaces practical sensitivity cues: **Biggest Lever** and **Biggest Risk**.
+
+### 7-Day Campaign Playbook
+- **Days 1–2 (Seed Distribution):** Recruit campus connectors, club leads, and distribute attribution-tagged WhatsApp links.
+- **Days 3–4 (Diagnose Funnel):** Analyze early incoming metrics to locate conversion drop-offs.
+- **Days 5–6 (Concentrate Effort):** Reallocate attention toward high-performing engineering channels and refine messaging hooks.
+- **Day 7 (Final Push & Reconciliation):** Send final session reminders, tally unique registrations, and compute final cost per acquisition.
 
 ---
 
@@ -102,7 +120,7 @@ Starts the local development server at `http://localhost:5173`.
 ```bash
 npm test
 ```
-Executes all 21 Vitest tests covering assessment heuristics, preset classifications, edge cases, underspecified input handling, and growth calculations.
+Executes all 28 Vitest tests covering assessment heuristics, preset classifications, edge cases, underspecified input handling, growth calculations, and attribution logic.
 
 ### Production Build & Preview
 ```bash
@@ -117,4 +135,4 @@ Compiles TypeScript and outputs the production bundle to `dist/`.
 
 - **Heuristic Diagnostic:** ShipScope is an engineering planning tool. The rule-based scope indicator does **not** predict academic marks, viva outcomes, faculty approval, or hiring chances.
 - **No Remote AI Backend:** All parsing is deterministic and executes locally in the student's browser.
-- **Simulation Disclaimer:** The growth campaign simulation is a hypothetical projection tool designed to demonstrate funnel mechanics; it does not represent live campus registrations.
+- **Simulation Disclaimer:** The growth campaign simulation is a hypothetical projection tool designed to demonstrate funnel mechanics; it does not represent live campus registrations or verified outcomes.

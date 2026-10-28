@@ -1,16 +1,151 @@
 import { GrowthSimulatorInputs, GrowthSimulatorOutputs } from '../types';
 
 export const DEFAULT_GROWTH_INPUTS: GrowthSimulatorInputs = {
-  connectors: 8,
+  connectors: 15,
   groupsPerConnector: 4,
   averageGroupSize: 120,
   overlapRate: 0.25, // 25% overlap
   visitRate: 0.08, // 8% click/visit rate
-  registrationConversionRate: 0.18, // 18% registration conversion
-  referralK: 0.35, // 0.35 referral registrations per direct registration
+  registrationConversionRate: 0.20, // 20% registration conversion
+  referralK: 0.25, // 0.25 incremental referral registrations per direct registration
   budget: 2000, // ₹2,000 INR
   registrationTarget: 500 // 500 registrations
 };
+
+export interface CampaignScenario {
+  id: 'conservative' | 'base' | 'stretch';
+  name: string;
+  badge: string;
+  description: string;
+  inputs: GrowthSimulatorInputs;
+}
+
+export const CAMPAIGN_SCENARIOS: Record<'conservative' | 'base' | 'stretch', CampaignScenario> = {
+  conservative: {
+    id: 'conservative',
+    name: 'Conservative assumptions',
+    badge: 'LOW REACH & CONVERSION',
+    description: 'Cautious baseline with lower student connector participation and conservative visit/conversion rates.',
+    inputs: {
+      connectors: 8,
+      groupsPerConnector: 3,
+      averageGroupSize: 100,
+      overlapRate: 0.30,
+      visitRate: 0.05,
+      registrationConversionRate: 0.12,
+      referralK: 0.15,
+      budget: 2000,
+      registrationTarget: 500
+    }
+  },
+  base: {
+    id: 'base',
+    name: 'Base planning assumptions',
+    badge: 'DEFAULT MODEL',
+    description: 'Realistic middle-ground campaign assumptions across campus connectors and active WhatsApp coding groups.',
+    inputs: {
+      connectors: 15,
+      groupsPerConnector: 4,
+      averageGroupSize: 120,
+      overlapRate: 0.25,
+      visitRate: 0.08,
+      registrationConversionRate: 0.20,
+      referralK: 0.25,
+      budget: 2000,
+      registrationTarget: 500
+    }
+  },
+  stretch: {
+    id: 'stretch',
+    name: 'Stretch assumptions',
+    badge: 'TARGET EXCEEDED',
+    description: 'Ambitious assumptions requiring high connector engagement, compelling messaging hooks, and active peer referrals.',
+    inputs: {
+      connectors: 30,
+      groupsPerConnector: 5,
+      averageGroupSize: 150,
+      overlapRate: 0.15,
+      visitRate: 0.12,
+      registrationConversionRate: 0.25,
+      referralK: 0.40,
+      budget: 2000,
+      registrationTarget: 500
+    }
+  }
+};
+
+export interface ScenarioGuidance {
+  bottleneckTitle: string;
+  recommendation: string;
+  biggestLever: string;
+  biggestRisk: string;
+}
+
+/**
+ * Deterministic rule-based guidance identifying campaign constraints and high-leverage actions.
+ */
+export function analyzeScenarioGuidance(
+  inputs: GrowthSimulatorInputs,
+  outputs: GrowthSimulatorOutputs
+): ScenarioGuidance {
+  if (outputs.estimatedUniqueReach < 3000) {
+    return {
+      bottleneckTitle: 'Distribution Bottleneck',
+      recommendation:
+        'Distribution is the bottleneck. The current assumptions do not put enough relevant students in front of the campaign.',
+      biggestLever: 'Campus connectors & group reach',
+      biggestRisk: 'Insufficient audience reach'
+    };
+  }
+
+  if (inputs.visitRate < 0.06) {
+    return {
+      bottleneckTitle: 'Invitation-to-Visit Bottleneck',
+      recommendation:
+        'The invitation-to-visit step is the main constraint. Test the message and project-preview hook before adding more channels.',
+      biggestLever: 'Messaging hook & preview copy',
+      biggestRisk: 'Students ignoring connector links'
+    };
+  }
+
+  if (inputs.registrationConversionRate < 0.15) {
+    return {
+      bottleneckTitle: 'Registration Conversion Bottleneck',
+      recommendation:
+        'Traffic is sufficient, but too few visitors register. Focus on CTA clarity and registration friction.',
+      biggestLever: 'Registration flow clarity & friction removal',
+      biggestRisk: 'High page bounce rate'
+    };
+  }
+
+  if (inputs.referralK < 0.20) {
+    return {
+      bottleneckTitle: 'Weak Peer Multiplier',
+      recommendation:
+        'Peer sharing is contributing little. Treat referrals as upside rather than relying on them to close the target gap.',
+      biggestLever: 'Peer-sharing prompts after diagnosis',
+      biggestRisk: 'Zero viral distribution'
+    };
+  }
+
+  if (outputs.targetMet) {
+    return {
+      bottleneckTitle: 'Target Achievable Under Assumptions',
+      recommendation:
+        'This scenario reaches the target, but the assumptions still require real-world validation.',
+      biggestLever: 'Connector coordination consistency',
+      biggestRisk: 'Over-estimating group participation'
+    };
+  }
+
+  return {
+    bottleneckTitle: 'Balanced Funnel Gap',
+    recommendation:
+      'Balance across distribution and conversion: both incremental reach and higher conversion are required to close the gap.',
+    biggestLever: 'Simultaneous reach expansion & conversion rate',
+    biggestRisk: 'Short 7-day campaign runway'
+  };
+}
 
 /**
  * Pure calculation engine for the 7-day hypothetical campaign simulator.
