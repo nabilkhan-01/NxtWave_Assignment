@@ -106,3 +106,4 @@ export const ProjectInput: React.FC<ProjectInputProps> = ({
     </section>
   );
 };
+

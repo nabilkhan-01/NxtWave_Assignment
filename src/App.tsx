@@ -78,7 +78,7 @@ export const App: React.FC = () => {
       <header className="workbench-header">
         <div className="container header-container">
           <div className="brand-group">
-            <span className="brand-badge">DIAGNOSTIC BENCH v1.0</span>
+            <span className="brand-badge">CAPSTONE DIAGNOSTIC</span>
             <h1 className="brand-title">ShipScope</h1>
           </div>
           <div className="nav-spec">
@@ -147,9 +147,9 @@ export const App: React.FC = () => {
             ShipScope is a deterministic scoping diagnostic for engineering students. Built for practical first-version execution.
           </p>
           <div className="footer-specs">
-            <code>EST. 2026</code>
+            <code>RULE-BASED EVALUATION</code>
             <span className="divider">•</span>
-            <code>NO-SLOP BENCH</code>
+            <code>CLIENT-SIDE ONLY</code>
           </div>
         </div>
       </footer>

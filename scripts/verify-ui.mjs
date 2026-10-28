@@ -134,10 +134,36 @@ async function run() {
         expression: 'document.querySelector(".verdict-headline")?.innerText'
       });
       const scoreManageable = await send('Runtime.evaluate', {
-        expression: 'document.querySelector(".metric-score")?.innerText'
+        expression: 'document.querySelector(".metric-fit-label")?.innerText'
       });
       console.log('Custom Idea Verdict:', verdictManageable.result.value);
-      console.log('Custom Idea Score:', scoreManageable.result.value);
+      console.log('Custom Idea Fit Label:', scoreManageable.result.value);
+
+      // Scenario 3b: Vague Career Goal (Underspecified)
+      console.log('\n--- Scenario 3b: Vague Career Goal (Underspecified) ---');
+      await send('Runtime.evaluate', {
+        expression: `(() => {
+          const ta = document.querySelector("#project-description");
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+          nativeInputValueSetter.call(ta, "project to show foreign internship and full time role for especially freshers");
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          ta.dispatchEvent(new Event('change', { bubbles: true }));
+        })()`
+      });
+      await new Promise(r => setTimeout(r, 300));
+      await send('Runtime.evaluate', {
+        expression: 'document.querySelector("button.btn-primary").click()'
+      });
+      await new Promise(r => setTimeout(r, 500));
+
+      const verdictVague = await send('Runtime.evaluate', {
+        expression: 'document.querySelector(".verdict-headline")?.innerText'
+      });
+      const fitVague = await send('Runtime.evaluate', {
+        expression: 'document.querySelector(".metric-fit-label")?.innerText'
+      });
+      console.log('Vague Goal Verdict:', verdictVague.result.value);
+      console.log('Vague Goal Fit Label:', fitVague.result.value);
 
       const shotManageable = await send('Page.captureScreenshot', { format: 'png' });
       fs.writeFileSync('D:\\NXTWave\\results-manageable.png', Buffer.from(shotManageable.data, 'base64'));

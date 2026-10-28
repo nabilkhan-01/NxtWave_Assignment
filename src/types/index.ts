@@ -23,6 +23,8 @@ export interface RoadmapStep {
 export interface ScopeAssessmentResult {
   classification: ScopeClassification;
   heuristicScopeScore: number; // 0 to 100 indicator (heuristic scope-fit indicator, NOT success/viva/employability probability)
+  fitLabel: 'Strong fit' | 'Moderate fit' | 'Low fit' | 'Needs definition';
+  isUnderspecified?: boolean;
   verdictTitle: string;
   explanation: string;
   reasons: string[];

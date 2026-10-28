@@ -11,6 +11,14 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
   onEditIdea
 }) => {
   const getStatusBadge = () => {
+    if (result.isUnderspecified) {
+      return {
+        label: 'Needs More Definition',
+        tagClass: 'status-tag-neutral',
+        summaryClass: 'summary-neutral'
+      };
+    }
+
     switch (result.classification) {
       case 'manageable':
         return {
@@ -47,8 +55,11 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
             </span>
           </div>
           <div className="scope-metric-box">
-            <span className="metric-label">HEURISTIC SCOPE-FIT:</span>
-            <span className="metric-score"><code>{result.heuristicScopeScore}</code> / 100</span>
+            <span className="metric-label">ESTIMATED FIT:</span>
+            <span className="metric-fit-label"><code>{result.fitLabel}</code></span>
+            <span className="metric-subdetail">
+              (Rule-based score: {result.heuristicScopeScore}/100)
+            </span>
           </div>
         </div>
 
@@ -62,7 +73,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
           <div className="methodology-note">
             <span className="mono-badge">NOTE</span>
             <span>
-              Heuristic scope-fit indicator reflects initial architecture complexity and feature breadth. It is an engineering scoping tool, not a prediction of academic grades, viva outcomes, or hiring probability.
+              Rule-based scope indicator reflects initial architecture complexity and feature breadth. It is an engineering scoping tool, not a prediction of academic grades, viva outcomes, or hiring probability.
             </span>
           </div>
         </div>
@@ -225,3 +236,4 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
     </article>
   );
 };
+

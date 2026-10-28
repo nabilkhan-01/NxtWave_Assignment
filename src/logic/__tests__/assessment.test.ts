@@ -93,9 +93,44 @@ describe('Scope Assessment Engine', () => {
     expect(result.detectedComplexityFactors.some(f => f.id === 'admin-dashboard')).toBe(true);
   });
 
+  it('detects underspecified vague career goals and does NOT produce a high-confidence manageable result', () => {
+    const vagueCareerInput = 'project to show foreign internship and full time role for especially freshers';
+    const result = assessScope(vagueCareerInput);
+
+    expect(result.classification).not.toBe('manageable');
+    expect(result.classification).toBe('needs-narrowing');
+    expect(result.isUnderspecified).toBe(true);
+    expect(result.fitLabel).toBe('Needs definition');
+    expect(result.heuristicScopeScore).toBeLessThanOrEqual(45);
+    expect(result.verdictTitle).toBe('Needs More Definition');
+    expect(result.reasons.some(r => r.toLowerCase().includes('missing input') || r.toLowerCase().includes('undefined'))).toBe(true);
+    // Does not invent complex architecture
+    expect(result.essentialV1Features.some(f => f.toLowerCase().includes('define the primary user'))).toBe(true);
+  });
+
+  it('detects generic AI requests as underspecified and requests clarification', () => {
+    const genericAI = 'make an AI app for students';
+    const result = assessScope(genericAI);
+
+    expect(result.isUnderspecified).toBe(true);
+    expect(result.fitLabel).toBe('Needs definition');
+    expect(result.verdictTitle).toBe('Needs More Definition');
+    expect(result.essentialV1Features.some(f => f.toLowerCase().includes('input') || f.toLowerCase().includes('output'))).toBe(true);
+  });
+
+  it('correctly classifies a clear broad platform with multiple high-risk factors as too-broad', () => {
+    const broadInput = 'Build a mobile and web platform with user accounts, real-time video interviews, live AI scoring, payments, notifications, admin dashboards and analytics.';
+    const result = assessScope(broadInput);
+
+    expect(result.classification).toBe('too-broad');
+    expect(result.fitLabel).toBe('Low fit');
+    expect(result.detectedComplexityFactors.length).toBeGreaterThanOrEqual(4);
+    expect(result.heuristicScopeScore).toBeLessThanOrEqual(40);
+  });
+
   it('safely evaluates empty or whitespace string', () => {
     const emptyResult = assessScope('   ');
     expect(emptyResult.classification).toBe('needs-narrowing');
-    expect(emptyResult.heuristicScopeScore).toBe(35);
+    expect(emptyResult.isUnderspecified).toBe(true);
   });
 });

@@ -44,7 +44,7 @@ const COMPLEXITY_RULES: ComplexityRule[] = [
     name: 'Multi-Platform & Cross-Device Sync',
     category: 'platform',
     patterns: [
-      /\b(mobile\s+and\s+desktop|ios\s+and\s+android|cross-?platform|react\s+native|flutter|smartphones?|sync\s+across\s+devices)\b/i,
+      /\b(mobile\s+and\s+(web|desktop)|ios\s+and\s+android|cross-?platform|react\s+native|flutter|smartphones?|sync\s+across\s+devices)\b/i,
       /\b(mobile\s+app|android\s+app|ios\s+app)\b/i
     ],
     severity: 'medium',
@@ -83,7 +83,7 @@ const COMPLEXITY_RULES: ComplexityRule[] = [
     name: 'External Notifications & Messaging Gateways',
     category: 'feature-creep',
     patterns: [
-      /\b(sms|email\s+alerts?|push\s+notifications?|whatsapp\s+alerts?|telegram\s+bot|notification\s+gateway)\b/i,
+      /\b(notifications?|sms|email\s+alerts?|push\s+notifications?|whatsapp\s+alerts?|telegram\s+bot|notification\s+gateway)\b/i,
       /\b(email\s+notifications?|sms\s+and\s+email)\b/i
     ],
     severity: 'low',
@@ -96,7 +96,7 @@ const COMPLEXITY_RULES: ComplexityRule[] = [
     name: 'Admin Portals & Management Dashboards',
     category: 'feature-creep',
     patterns: [
-      /\b(admin\s+(dashboard|portal|panel)|analytics\s+dashboard|management\s+console|superadmin)\b/i
+      /\b(admin\s+(dashboards?|portals?|panels?)|analytics\s+(dashboards?|console)|management\s+(consoles?|portals?)|superadmin)\b/i
     ],
     severity: 'medium',
     weight: 12,
@@ -156,14 +156,22 @@ const COMPLEXITY_RULES: ComplexityRule[] = [
   }
 ];
 
+// Heuristics for minimum required project structure
+const INPUT_SIGNAL_REGEX = /\b(input|inputs|upload|paste|file|document|pdf|text|resume|notes|code|transcript|audio|video|image|camera|data|query|questions?|form|prompt|complaint|syllabus|feed)\b/i;
+const TRANSFORM_SIGNAL_REGEX = /\b(generat(e|ing)|extract(ing)?|summariz(e|ing)|classif(y|ying)|pars(e|ing)|compar(e|ing)|match(ing)?|detect(ing)?|filter(ing)?|translat(e|ing)|search(ing)?|retriev(e|ing)|rank(ing)?|convert(ing)?|predict(ing)?|triage|answer(ing)?|evaluat(e|ing))\b/i;
+const OUTPUT_SIGNAL_REGEX = /\b(output|result|return(s)?|show(s)?|display(s)?|list(s)?|summary|report|answer(s)?|quiz|recommend(s)?|alert|notification|dashboard|feedback|scores?|excerpt|citations?)\b/i;
+const VAGUE_GOAL_REGEX = /\b(project to show|want to make|idea is to|project for (freshers|students|placements)|make an (ai|app)|helper for|platform for (freshers|jobs))\b/i;
+
 export function assessScope(rawInput: string): ScopeAssessmentResult {
   const input = (rawInput || '').trim();
 
-  // Guard against minimal/vague input
+  // Guard against minimal/vague input (< 10 chars)
   if (input.length < 10) {
     return {
       classification: 'needs-narrowing',
-      heuristicScopeScore: 35,
+      fitLabel: 'Needs definition',
+      isUnderspecified: true,
+      heuristicScopeScore: 30,
       verdictTitle: 'Input Too Brief to Fully Evaluate',
       explanation: 'The provided project description has fewer than 10 characters. A meaningful scope evaluation requires describing features, data flow, and inputs.',
       reasons: [
@@ -171,14 +179,19 @@ export function assessScope(rawInput: string): ScopeAssessmentResult {
         'Core problem and input/output structure are undefined.'
       ],
       detectedComplexityFactors: [],
-      essentialV1Features: ['Define the single primary user task.', 'Specify what input the system accepts.', 'Specify what exact output the system produces.'],
+      essentialV1Features: [
+        'Define the primary user.',
+        'Define the input (e.g. text file, user query).',
+        'Define the expected output.',
+        'Choose one core action.'
+      ],
       featuresToPostpone: ['Any secondary workflows or integrations.'],
       first60MinuteRoadmap: [
-        { phase: 'Minute 00-20', durationMinutes: 20, task: 'Define Problem Statement', deliverable: 'One-paragraph summary of single input and output.' },
-        { phase: 'Minute 20-40', durationMinutes: 20, task: 'Sketch Data Contract', deliverable: 'JSON schema representing the sample request and response.' },
-        { phase: 'Minute 40-60', durationMinutes: 20, task: 'Write One-File Script', deliverable: 'Minimal command-line test script running the core logic.' }
+        { phase: 'Minute 00–20', durationMinutes: 20, task: 'Define Problem Statement', deliverable: 'One-paragraph summary of single input and output.' },
+        { phase: 'Minute 20–40', durationMinutes: 20, task: 'Sketch Data Contract', deliverable: 'JSON schema representing the sample request and response.' },
+        { phase: 'Minute 40–60', durationMinutes: 20, task: 'Write One-File Script', deliverable: 'Minimal command-line test script running the core logic.' }
       ],
-      successTest: 'Provide a detailed 2-3 sentence description outlining inputs, processing, and intended deliverables.',
+      successTest: 'Provide a detailed 2–3 sentence description outlining inputs, processing, and intended deliverables.',
       assumptionsAndLimitations: [
         'Assessment is constrained by lack of user input.',
         'Assumed standard engineering capstone timeline (4-8 weeks).'
@@ -212,6 +225,80 @@ export function assessScope(rawInput: string): ScopeAssessmentResult {
     }
   }
 
+  // Structural checks for underspecified ideas (when no high-risk factors were explicitly found)
+  const hasInputSignal = INPUT_SIGNAL_REGEX.test(input);
+  const hasTransformSignal = TRANSFORM_SIGNAL_REGEX.test(input);
+  const hasOutputSignal = OUTPUT_SIGNAL_REGEX.test(input);
+  const isVagueGoalPattern = VAGUE_GOAL_REGEX.test(input);
+
+  // An idea is underspecified if:
+  // - It matches a vague goal phrase ("project to show...", "make an AI app...") and lacks concrete input/transform signals
+  // - OR it lacks both an input source and a transformation verb
+  // - OR it is very short (< 40 chars) without structural signals
+  const isUnderspecified =
+    detectedFactors.length === 0 &&
+    (isVagueGoalPattern || (!hasInputSignal && !hasTransformSignal) || (!hasInputSignal && input.length < 90 && !hasOutputSignal));
+
+  if (isUnderspecified) {
+    return {
+      classification: 'needs-narrowing',
+      fitLabel: 'Needs definition',
+      isUnderspecified: true,
+      heuristicScopeScore: 35,
+      verdictTitle: 'Needs More Definition',
+      explanation:
+        'The idea describes a goal, but not yet how the product works. Add the main input, expected output, and 2–3 intended features for a more useful scope assessment.',
+      reasons: [
+        'Missing input definition: the description does not specify what raw data, file, or prompt the user provides.',
+        'Missing transformation mechanism: the description does not state how the system analyzes, matches, or generates content.',
+        'Undefined deliverable format: clarify whether the output is a formatted table, text summary, or category label.'
+      ],
+      detectedComplexityFactors: [],
+      essentialV1Features: [
+        'Define the primary user and their single central task.',
+        'Define the input accepted (e.g. pasted job description, text document, or query).',
+        'Define the concrete output (e.g. 3-bullet summary, matched skills list, or category label).',
+        'Choose one core action instead of broad multi-step ambitions.'
+      ],
+      featuresToPostpone: [
+        'Secondary workflows until the core input-to-output path is established.',
+        'User accounts or web scraping before the primary data contract is fixed.'
+      ],
+      first60MinuteRoadmap: [
+        {
+          phase: 'Minute 00–15',
+          durationMinutes: 15,
+          task: 'Draft One-Sentence Data Contract',
+          deliverable: 'Write down: "Given [Input], the system outputs [Deliverable] by [Core Action]."'
+        },
+        {
+          phase: 'Minute 15–35',
+          durationMinutes: 20,
+          task: 'Gather Two Real Input Samples',
+          deliverable: 'Two real sample data files or text snippets saved locally.'
+        },
+        {
+          phase: 'Minute 35–50',
+          durationMinutes: 15,
+          task: 'Hand-Draft Expected Outputs',
+          deliverable: 'Manually write out the exact expected output for each sample.'
+        },
+        {
+          phase: 'Minute 50–60',
+          durationMinutes: 10,
+          task: 'Re-test in ShipScope',
+          deliverable: 'Paste the clarified technical description back into ShipScope.'
+        }
+      ],
+      successTest: 'Provide a concrete test case: Given a specific sample input, what is the exact string or JSON output expected?',
+      assumptionsAndLimitations: [
+        'Evaluation indicates this idea is in the conceptual stage and lacks technical boundaries.',
+        'Rule-based scope diagnostic requires input and output parameters to evaluate complexity.',
+        'Clarifying the core data flow will enable an actionable architectural roadmap.'
+      ]
+    };
+  }
+
   // Check for feature count / conjunction explosion
   const conjunctionMatches = input.match(/\b(and also|in addition|as well as|moreover|along with|plus)\b/gi);
   const conjunctionCount = conjunctionMatches ? conjunctionMatches.length : 0;
@@ -221,21 +308,21 @@ export function assessScope(rawInput: string): ScopeAssessmentResult {
     postponeFeatures.push('Secondary feature branches: select strictly one core value path and defer the rest.');
   }
 
-  // Length check: extremely short descriptions without detected factors might be vague
-  const isVague = input.length < 35 && detectedFactors.length === 0;
-  if (isVague) {
-    totalPenalty += 20;
-    reasons.push('Vague scope signal: brief description lacks implementation specifics regarding data ingestion, processing, or runtime architecture.');
+  // Length check: short descriptions without detected factors might be somewhat brief
+  const isBrief = input.length < 50 && detectedFactors.length === 0;
+  if (isBrief) {
+    totalPenalty += 15;
+    reasons.push('Brief scope signal: concise description would benefit from specifying data format and transformation steps.');
   }
 
-  // Calculate Heuristic Scope-Fit Indicator (100 = perfectly scoped narrow v1, 0 = heavily overscoped)
-  // Strictly bounded 5 to 95 to avoid false impression of perfection or absolute failure
+  // Calculate Heuristic Scope-Fit Indicator (strictly bounded 10 to 90)
   let rawScore = 100 - totalPenalty;
   if (rawScore < 10) rawScore = 10;
   if (rawScore > 90) rawScore = 90;
 
   // Determine Classification based on deterministic penalty thresholds
   let classification: ScopeClassification;
+  let fitLabel: 'Strong fit' | 'Moderate fit' | 'Low fit' | 'Needs definition';
   let verdictTitle: string;
   let explanation: string;
 
@@ -244,19 +331,25 @@ export function assessScope(rawInput: string): ScopeAssessmentResult {
 
   if (isSeverelyOverscoped) {
     classification = 'too-broad';
+    fitLabel = 'Low fit';
     verdictTitle = 'Too Broad for a First Version';
-    explanation = 'The concept describes an expansive production architecture or multiple high-risk engineering layers (such as streaming media, custom training, multi-platform sync, or multi-role systems). Building this in one go will likely stall the project.';
+    explanation =
+      'The concept describes an expansive production architecture or multiple high-risk engineering layers (such as streaming media, custom training, multi-platform sync, or multi-role systems). Building this in one go will likely stall the project.';
   } else if (totalPenalty >= 18) {
     classification = 'needs-narrowing';
+    fitLabel = 'Moderate fit';
     verdictTitle = 'Scope Needs Narrowing';
-    explanation = 'A strong, viable capstone idea exists, but the current description packages multiple dependent components together. Trimming 2-3 peripheral systems will dramatically increase first-version delivery speed.';
+    explanation =
+      'A strong, viable capstone idea exists, but the current description packages multiple dependent components together. Trimming 2–3 peripheral systems will dramatically increase first-version delivery speed.';
   } else {
     classification = 'manageable';
+    fitLabel = 'Strong fit';
     verdictTitle = 'Manageable First Version';
-    explanation = 'The described scope is relatively focused with a clear path to demonstrating the primary input-output value without deep infrastructure entanglement.';
+    explanation =
+      'The described scope is relatively focused with a clear path to demonstrating the primary input-output value without deep infrastructure entanglement.';
   }
 
-  // Synthesize essential v1 features and first 60-minute roadmap
+  // Synthesize essential v1 features
   const essentialV1Features: string[] = [];
   if (detectedFactors.some(f => f.id === 'realtime-media')) {
     essentialV1Features.push('Accept a pre-recorded audio file or existing text transcript instead of live capture.');
@@ -265,7 +358,7 @@ export function assessScope(rawInput: string): ScopeAssessmentResult {
     essentialV1Features.push('Index exactly one source document (e.g. single PDF or raw text) for transparent retrieval.');
   }
   if (detectedFactors.some(f => f.id === 'batch-scraping')) {
-    essentialV1Features.push('Use 5-10 pre-curated sample data records rather than building automated web scrapers.');
+    essentialV1Features.push('Use 5–10 pre-curated sample data records rather than building automated web scrapers.');
   }
   if (detectedFactors.some(f => f.id === 'auth-accounts')) {
     essentialV1Features.push('Single unauthenticated session with direct screen display of results.');
@@ -306,36 +399,38 @@ export function assessScope(rawInput: string): ScopeAssessmentResult {
   ];
 
   // Synthesize observable success test
-  let successTest = 'Feed one realistic sample input into the core transformation engine and verify that the output adheres strictly to the expected format within 3 seconds.';
+  let successTest =
+    'Feed one realistic sample input into the core transformation engine and verify that the output adheres strictly to the expected format within 3 seconds.';
   if (detectedFactors.some(f => f.id === 'multi-doc-rag')) {
-    successTest = 'Supply a 2-page text excerpt. Query a specific factual point. Verify the output provides an accurate answer and cites the matching paragraph.';
+    successTest =
+      'Supply a 2-page text excerpt. Query a specific factual point. Verify the output provides an accurate answer and cites the matching paragraph.';
   } else if (detectedFactors.some(f => f.id === 'realtime-media')) {
-    successTest = 'Upload a 60-second lecture audio snippet or transcript. Verify the system outputs a 3-bullet summary without crashing or dropping connection.';
+    successTest =
+      'Upload a 60-second lecture audio snippet or transcript. Verify the system outputs a 3-bullet summary without crashing or dropping connection.';
   } else if (detectedFactors.some(f => f.id === 'batch-scraping' || f.id === 'unverifiable-claims')) {
-    successTest = 'Compare one sample resume against one sample job posting. Verify the system flags at least 2 matching skills and 1 missing requirement.';
+    successTest =
+      'Compare one sample resume against one sample job posting. Verify the system flags at least 2 matching skills and 1 missing requirement.';
   }
 
-  // Assumptions & Limitations
   const assumptionsAndLimitations = [
     'Assumes a typical undergraduate capstone project scope with 1 to 4 team members.',
     'Evaluation is based on semantic heuristic rules and keyword patterns in the submitted text.',
-    'This heuristic scope indicator does NOT predict academic marks, viva outcomes, or hiring probability.',
+    'This rule-based scope indicator does NOT predict academic marks, viva outcomes, or hiring probability.',
     'Scores are deterministic: the exact same input text will always return identical diagnostic results.'
   ];
 
-  if (isVague) {
-    assumptionsAndLimitations.unshift('Description is brief. The evaluation assumes standard complexity for unspecified backend and data layers.');
-  }
-
   return {
     classification,
+    fitLabel,
+    isUnderspecified: false,
     heuristicScopeScore: rawScore,
     verdictTitle,
     explanation,
     reasons,
     detectedComplexityFactors: detectedFactors,
     essentialV1Features,
-    featuresToPostpone: postponeFeatures.length > 0 ? postponeFeatures : ['Multi-user accounts and permissions', 'Custom model fine-tuning pipelines'],
+    featuresToPostpone:
+      postponeFeatures.length > 0 ? postponeFeatures : ['Multi-user accounts and permissions', 'Custom model fine-tuning pipelines'],
     first60MinuteRoadmap,
     successTest,
     assumptionsAndLimitations

@@ -490,6 +490,11 @@
   border-left: 4px solid var(--status-broad-text);
 }
 
+.summary-neutral {
+  background-color: #f6f5f2;
+  border-left: 4px solid var(--text-tertiary);
+}
+
 .verdict-meta-bar {
   display: flex;
   align-items: center;
@@ -540,17 +545,44 @@
   color: var(--status-broad-text);
 }
 
+.status-tag-neutral {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+}
+
 .scope-metric-box {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   font-family: var(--font-mono);
   font-size: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .metric-label {
   color: var(--text-tertiary);
   font-weight: 600;
+}
+
+.metric-fit-label {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.metric-fit-label code {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  background: var(--accent-subtle);
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--accent-border);
+  border-radius: 2px;
+}
+
+.metric-subdetail {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
 }
 
 .metric-score {
