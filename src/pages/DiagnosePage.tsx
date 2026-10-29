@@ -147,30 +147,34 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ attribution }) => {
                   </div>
                 </li>
               </ul>
-
-              {/* Small expandable technical disclosure */}
-              <details className="methodology-expandable">
-                <summary className="methodology-summary">
-                  How ShipScope evaluates scope
-                </summary>
-                <div className="methodology-body">
-                  <p>ShipScope checks for 7 common sources of capstone overscoping:</p>
-                  <ul className="methodology-layers-list">
-                    <li>Streaming media & live video/audio</li>
-                    <li>Custom model training from scratch</li>
-                    <li>Multi-platform mobile & device sync</li>
-                    <li>Role-based authentication & admin portals</li>
-                    <li>Payment gateways & commerce</li>
-                    <li>SMS, WhatsApp & external notifications</li>
-                    <li>Multi-document vector database clusters</li>
-                  </ul>
-                  <p className="methodology-small-note">
-                    Evaluation is deterministic and client-side. It does not predict grades or hiring outcomes.
-                  </p>
-                </div>
-              </details>
             </div>
           </aside>
+        </div>
+
+        {/* Evaluation Methodology Note placed below workbench to ground the layout */}
+        <div className="page-inner diagnose-methodology-container">
+          <details className="secondary-disclosure-details methodology-full-disclosure">
+            <summary className="disclosure-summary">
+              How ShipScope evaluates scope (7 architectural checks)
+            </summary>
+            <div className="disclosure-content">
+              <p className="methodology-lead-text">
+                ShipScope checks for 7 common sources of capstone overscoping:
+              </p>
+              <div className="methodology-chips-grid">
+                <span className="methodology-chip">1. Streaming media & live video/audio</span>
+                <span className="methodology-chip">2. Custom model training from scratch</span>
+                <span className="methodology-chip">3. Multi-platform mobile & device sync</span>
+                <span className="methodology-chip">4. Role-based authentication & admin portals</span>
+                <span className="methodology-chip">5. Payment gateways & commerce</span>
+                <span className="methodology-chip">6. SMS, WhatsApp & external notifications</span>
+                <span className="methodology-chip">7. Multi-document vector database clusters</span>
+              </div>
+              <p className="methodology-small-note">
+                Evaluation is deterministic and client-side. It does not predict grades or hiring outcomes.
+              </p>
+            </div>
+          </details>
         </div>
       </section>
 

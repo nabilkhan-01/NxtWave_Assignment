@@ -97,11 +97,11 @@ export function evaluateExperiment(
     guidanceText = `Conversion rates are closely aligned (${(crA * 100).toFixed(1)}% vs ${(crB * 100).toFixed(1)}%, ${(diff * 100).toFixed(1)}% gap).`;
     recommendation = 'Neither message demonstrates a decisive conversion edge. Continue distributing both to test response across diverse student departments.';
   } else if (leadingVariant === 'A') {
-    guidanceText = `Variant A (Project Scope Hook) is currently leading by ${(diff * 100).toFixed(1)} percentage points (${(crA * 100).toFixed(1)}% vs ${(crB * 100).toFixed(1)}%).`;
-    recommendation = 'Variant A is outperforming Variant B in initial testing. Gather observations across 1–2 more campus groups before concentrating outreach on this hook.';
+    guidanceText = `Variant A is currently leading by ${(diff * 100).toFixed(1)} percentage points (${(crA * 100).toFixed(1)}% vs ${(crB * 100).toFixed(1)}%).`;
+    recommendation = 'Treat this as a directional signal and continue testing across more campus groups before reallocating outreach.';
   } else {
-    guidanceText = `Variant B (Build-First Hook) is currently leading by ${(diff * 100).toFixed(1)} percentage points (${(crB * 100).toFixed(1)}% vs ${(crA * 100).toFixed(1)}%).`;
-    recommendation = 'Variant B is outperforming Variant A in initial testing. Gather observations across 1–2 more campus groups before concentrating outreach on this hook.';
+    guidanceText = `Variant B is currently leading by ${(diff * 100).toFixed(1)} percentage points (${(crB * 100).toFixed(1)}% vs ${(crA * 100).toFixed(1)}%).`;
+    recommendation = 'Treat this as a directional signal and continue testing across more campus groups before reallocating outreach.';
   }
 
   return {

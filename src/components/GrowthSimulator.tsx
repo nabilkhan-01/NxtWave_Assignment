@@ -273,27 +273,31 @@ export const GrowthSimulator: React.FC<GrowthSimulatorProps> = ({ standalone: _s
           <div className="plain-funnel-sequence">
             <div className="plain-funnel-step">
               <span className="step-val">{outputs.grossExposures.toLocaleString()}</span>
-              <span className="step-name">people reached</span>
+              <span className="step-leader" aria-hidden="true" />
+              <span className="step-name">gross exposures</span>
             </div>
 
             <div className="plain-funnel-arrow" aria-hidden="true">↓</div>
 
             <div className="plain-funnel-step">
               <span className="step-val">{outputs.estimatedUniqueReach.toLocaleString()}</span>
-              <span className="step-name">estimated unique reach</span>
+              <span className="step-leader" aria-hidden="true" />
+              <span className="step-name">estimated unique students reached</span>
             </div>
 
             <div className="plain-funnel-arrow" aria-hidden="true">↓</div>
 
             <div className="plain-funnel-step">
               <span className="step-val">{outputs.estimatedVisits.toLocaleString()}</span>
-              <span className="step-name">visits</span>
+              <span className="step-leader" aria-hidden="true" />
+              <span className="step-name">estimated visits</span>
             </div>
 
             <div className="plain-funnel-arrow" aria-hidden="true">↓</div>
 
             <div className="plain-funnel-step">
               <span className="step-val">{outputs.estimatedDirectRegistrations.toLocaleString()}</span>
+              <span className="step-leader" aria-hidden="true" />
               <span className="step-name">direct registrations</span>
             </div>
 
@@ -301,14 +305,16 @@ export const GrowthSimulator: React.FC<GrowthSimulatorProps> = ({ standalone: _s
 
             <div className="plain-funnel-step">
               <span className="step-val">+{outputs.estimatedReferralRegistrations.toLocaleString()}</span>
-              <span className="step-name">referrals</span>
+              <span className="step-leader" aria-hidden="true" />
+              <span className="step-name">referral registrations</span>
             </div>
 
             <div className="plain-funnel-arrow" aria-hidden="true">↓</div>
 
             <div className="plain-funnel-step total-step">
               <span className="step-val highlight">{outputs.estimatedTotalRegistrations.toLocaleString()}</span>
-              <span className="step-name">total</span>
+              <span className="step-leader" aria-hidden="true" />
+              <span className="step-name">estimated total registrations</span>
             </div>
           </div>
 

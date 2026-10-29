@@ -56,15 +56,11 @@ export const MessageExperimentLab: React.FC = () => {
     const diffPct = (evaluation.absoluteDiff! * 100).toFixed(1);
 
     if (evaluation.leadingVariant === 'tied') {
-      return `Both message angles are performing equally at ${(evaluation.crA * 100).toFixed(1)}% conversion.`;
+      return `Both message angles are performing equally at ${(evaluation.crA * 100).toFixed(1)}% conversion. Treat this as a directional signal and continue testing across more campus groups before reallocating outreach.`;
     }
 
-    const leaderName = evaluation.leadingVariant === 'A' ? 'Project scope message (Variant A)' : 'Build-first message (Variant B)';
-    const sampleClause = evaluation.isSufficientEvidence
-      ? 'with enough data collected to support this direction.'
-      : 'but the sample is still too small to make a final decision.';
-
-    return `${leaderName} is currently leading by ${diffPct} percentage points, ${sampleClause}`;
+    const leaderName = evaluation.leadingVariant === 'A' ? 'Variant A' : 'Variant B';
+    return `${leaderName} is currently leading by ${diffPct} percentage points. Treat this as a directional signal and continue testing across more campus groups before reallocating outreach.`;
   };
 
   return (
@@ -219,7 +215,9 @@ export const MessageExperimentLab: React.FC = () => {
       <div className="current-signal-panel">
         <span className="signal-kicker">CURRENT SIGNAL</span>
         <p className="signal-sentence">{getSignalSentence()}</p>
-        <p className="signal-recommendation">{evaluation.recommendation}</p>
+        {!evaluation.isSufficientEvidence && (
+          <p className="signal-recommendation">{evaluation.recommendation}</p>
+        )}
       </div>
     </section>
   );

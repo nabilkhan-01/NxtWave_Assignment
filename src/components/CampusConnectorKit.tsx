@@ -3,6 +3,7 @@ import {
   ConnectorSourceType,
   MessageVariant,
   SOURCE_TYPES,
+  MESSAGE_VARIANTS,
   sanitizeSourceLabel,
   buildConnectorUrl,
   buildConnectorMessage
@@ -186,7 +187,13 @@ export const CampusConnectorKit: React.FC = () => {
             </div>
 
             <div className="message-box">
-              <pre className="message-text">{messageText}</pre>
+              <div className="message-text">
+                <p className="preview-message-body">{MESSAGE_VARIANTS[variant].body}</p>
+                <div className="preview-link-container">
+                  <span className="preview-link-prompt">Check your project scope:</span>
+                  <span className="preview-short-link">Try ShipScope →</span>
+                </div>
+              </div>
             </div>
 
             {/* Action Buttons: Unified Primary Share + Secondary Utilities */}
