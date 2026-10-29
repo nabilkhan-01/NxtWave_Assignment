@@ -26,7 +26,8 @@ ShipScope is organized into a clean multi-page application with a persistent, re
 | Route | Page | Purpose & Key Layout |
 | :--- | :--- | :--- |
 | `/` | **Home** | **Immediate 10-Second Comprehension:** High-impact 2-column hero with an authentic diagnostic preview sheet, horizontal 4-step process sequence (`IDEA → SCOPE → BUILD → GROW`), 3-module system overview triad, interactive 5-step campus acquisition loop, and methodology trust note. |
-| `/diagnose` | **Diagnose** | **Student Scoping Workbench:** Desktop 2-column layout (`width: min(100% - 64px, 1360px)`). Left: 4 teaching presets + custom idea editor. Right: 7-layer architecture complexity sidebar. Post-assessment displays full-width diagnostic report, verdict, 50/50 Build First vs Postpone columns, 60-min execution roadmap, acceptance test, workshop bridge, and teammate share generator. |
+| `/diagnose` | **Diagnose** | **Student Scoping Workbench:** Desktop 2-column layout (`width: min(100% - 64px, 1360px)`). Left: 4 teaching presets + custom idea editor. Right: 7-layer architecture complexity sidebar. Post-assessment displays full-width diagnostic report, verdict, 50/50 Build First vs Postpone columns, 60-min execution roadmap, acceptance test, "Start my Build Path" transition CTA, workshop bridge, and teammate share generator. |
+| `/build` | **Build Path** | **Personalized 60-Minute Execution Framework:** Dynamically turns evaluated scope into a sequence of focused 1-hour build sessions with concrete tasks, acceptance test gates (`I verified this — continue`), undo support, deterministic localStorage persistence/resets, self-guided demo learning modules with modal walkthroughs, and restrained workshop escalation. |
 | `/growth` | **Growth Toolkit** | **Distribution & Experimentation:** Campus Connector Kit (2-column distribution console with auto-sanitized slugs and WhatsApp links) + Message Experiment Lab (A/B testing calculator with sample-size-aware decision guidance). |
 | `/campaign` | **Campaign Model** | **Standalone 7-Day Growth Model:** Full-viewport interactive planning instrument with prominent scenario selector (Conservative, Base, Stretch), assumptions console, real-time funnel calculations, sensitivity analysis, and 4-phase tactical sprint timeline. |
 
@@ -69,7 +70,46 @@ The diagnostic engine ([`src/logic/assessment.ts`](src/logic/assessment.ts)) eva
 
 ---
 
-## 5. Growth Simulator Model (Hypothetical Campaign)
+## 5. Build Path Execution Engine & Demo Learning Modules
+
+ShipScope transforms a one-time scope diagnostic into a practical project execution path (`/build`). Built around the philosophy:
+
+$$\text{Idea} \longrightarrow \text{Scope} \longrightarrow \text{First 60 min} \longrightarrow \text{Optional Learning Help} \longrightarrow \text{Verify Success} \longrightarrow \text{Next 60 min} \longrightarrow \text{Repeat}$$
+
+### Core Architecture & Personalization
+- **Adaptive Stage Count:** Automatically generates 4 focused 1-hour build stages for standard projects, or a streamlined 3-stage path for simple, highly focused projects ($0$ complexity factors, concise scope).
+- **Archetype Personalization:** Never relies on generic templates. Tasks, success tests, and deliverables are tailored to detected project archetypes (Document/Notes Q&A, Resume-Job Matcher, Campus Issue Triage, Audio/Lecture Companion, and Generic workflows).
+- **Underspecified Scope Guard:** If an idea is classified as `Needs definition` (`isUnderspecified === true`), ShipScope explicitly prompts the student to define input/output contracts on `/diagnose` rather than inventing an arbitrary execution roadmap.
+
+### Session Anatomy
+Every 60-minute build session follows a structured engineering anatomy:
+1. **Goal:** One clear sentence defining the concrete deliverable for the hour.
+2. **Action Checklist:** 3 to 5 actionable tasks sized to fit within ~60 minutes.
+3. **Acceptance Test Gate ("Done When"):** An observable, verifiable test ensuring the session actually works before the student continues.
+4. **Step Verification & Progression:** The student must verify the acceptance test (`I verified this — continue →`) to unlock subsequent sessions. Progress can be re-opened at any time (`Undo completion`).
+5. **Optional Build Help (Demo Learning Modules):** Technical hurdle recommendations paired with each stage.
+
+### Deterministic Demo Learning Module Catalog
+Covers 15 self-guided prototype modules across 6 essential engineering domains:
+- **Text & LLM Fundamentals:** Input/output schemas, prompt design for structured JSON, pairwise text comparison, and extraction heuristics.
+- **Retrieval & Documents:** Single-document citations, semantic chunking, and handling unstructured formats.
+- **Frontend & Interfaces:** Minimal I/O forms, reactive loading states, and side-by-side comparison tables.
+- **APIs & Integration:** Resilient client-side wrappers, payload sanitization, and fallback states.
+- **Testing & Edge Cases:** Boundary test harnesses and failure mode isolation.
+- **Shipping & Demo Delivery:** Zero-backend deployment, live reviewer demos, and documenting deferred scope.
+
+Clicking **Open demo lesson** reveals a focused modal dialog detailing *Why this matters in your 60-minute build*, 3 to 5 core implementation principles (`01`, `02`, `03`), and a minimal code snippet.
+
+*Note: All modules are self-contained prototype reference guides. They are strictly not presented as official NxtWave course certifications or paid materials.*
+
+### State & Progress Persistence
+- **Deterministic Project Hashing:** Uses a 32-bit FNV-1a hash of the normalized project description.
+- **Isolated Progress Storage:** Completed stages are persisted in `localStorage`. If the student reassesses with a different project idea, progress automatically resets to prevent state leakage. Includes a global `Reset session checks` control.
+- **Zero Gamification:** Strictly avoids fake XP, streaks, confetti, or gamified mechanics.
+
+---
+
+## 6. Growth Simulator Model (Hypothetical Campaign)
 
 ShipScope includes an interactive scenario simulator ([`src/components/GrowthSimulator.tsx`](src/components/GrowthSimulator.tsx) and [`src/logic/growthSimulator.ts`](src/logic/growthSimulator.ts)) modeling a hypothetical 7-day campus outreach campaign (₹2,000 budget, 500 registration target):
 
@@ -108,7 +148,7 @@ Estimated Cost per Registration = Budget / Estimated Total Registrations
 
 ---
 
-## 6. Technology Stack
+## 7. Technology Stack
 
 - **Framework:** React 18 + TypeScript (strict mode, isolated modules)
 - **Routing:** Client-side zero-dependency router with query parameter preservation (`Router.tsx`)
@@ -119,7 +159,7 @@ Estimated Cost per Registration = Budget / Estimated Total Registrations
 
 ---
 
-## 7. Getting Started
+## 8. Getting Started
 
 ### Prerequisites
 - Node.js (v18+ recommended, verified on v24)
@@ -142,13 +182,13 @@ Starts the local development server at `http://localhost:5173`.
 ```bash
 npm test
 ```
-Executes all 54 Vitest tests across 7 test suites covering routing, assessment heuristics, preset classifications, edge cases, underspecified input handling, growth calculations, experiment significance, attribution logic, and the unified multi-channel share sheet.
+Executes all 66 Vitest tests across 8 test suites covering routing, assessment heuristics, preset classifications, edge cases, underspecified input handling, the personalized 60-minute build path engine, learning module catalogs, growth calculations, experiment significance, attribution logic, and the unified multi-channel share sheet.
 
 ### Automated End-to-End Browser QA
 ```bash
 node scripts/qa-runner.mjs
 ```
-Automated headless Chrome CDP test harness validating all 33 scenarios: cross-page routing, preset evaluation, edge cases, registration simulation, accessible share sheet modal/bottom-sheet behaviors, focus trapping, Escape key dismissals, zero horizontal overflow across 1440px and 375px viewports, and zero network leaks.
+Automated headless Chrome CDP test harness validating all 37 scenarios: cross-page routing, preset evaluation, edge cases, registration simulation, accessible share sheet modal/bottom-sheet behaviors, build path empty and active states, stage verification gates, undo transitions, demo lesson walkthrough modal, focus trapping, Escape key dismissals, zero horizontal overflow across 1440px and 375px viewports, and zero network leaks.
 
 ### Production Build & Preview
 ```bash
@@ -166,7 +206,7 @@ ShipScope is built as a zero-backend, pure client-side static web application wi
 
 ---
 
-## 8. Unified Multi-Channel Share Sheet
+## 9. Unified Multi-Channel Share Sheet
 
 ShipScope replaces fragmented sharing buttons with an accessible, unified Share Sheet modal (desktop) and slide-up bottom sheet (mobile):
 
@@ -182,7 +222,7 @@ ShipScope replaces fragmented sharing buttons with an accessible, unified Share 
 
 ---
 
-## 9. Limitations & Stated Assumptions
+## 10. Limitations & Stated Assumptions
 
 - **Heuristic Diagnostic:** ShipScope is an engineering planning tool. The rule-based scope indicator does **not** predict academic marks, viva outcomes, faculty approval, or hiring chances.
 - **No Remote AI Backend:** All parsing is deterministic and executes locally in the student's browser. No non-deterministic LLM APIs or cloud dependencies are involved.
