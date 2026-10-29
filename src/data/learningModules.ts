@@ -294,3 +294,4 @@ export const DEMO_LEARNING_MODULES: Record<string, DemoLearningModule> = {
     exampleSnippet: `// vercel.json for clean SPA routing:\n{\n  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]\n}`
   }
 };
+

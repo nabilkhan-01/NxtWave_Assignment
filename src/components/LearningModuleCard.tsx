@@ -48,3 +48,4 @@ export const LearningModuleCard: React.FC<LearningModuleCardProps> = ({
     </div>
   );
 };
+
