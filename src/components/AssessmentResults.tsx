@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from '../router/Router';
 import { ScopeAssessmentResult } from '../types';
 import { AttributionParams } from '../logic/attribution';
 import { WorkshopCTA } from './WorkshopCTA';
@@ -16,6 +17,8 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
   attribution,
   onEditIdea
 }) => {
+  const { navigate } = useRouter();
+
   const getStatusBadge = () => {
     if (result.isUnderspecified) {
       return {
@@ -182,6 +185,30 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
           </p>
           <div className="test-rule-footer">
             <code>TEST:</code> If this observable test succeeds, your first version works.
+          </div>
+        </div>
+      </section>
+
+      {/* 4.5 Build Path Transition Banner */}
+      <section className="results-section section-build-path-cta">
+        <div className="build-path-entry-card">
+          <div className="build-path-entry-content">
+            <span className="build-entry-kicker">EXECUTION ROADMAP</span>
+            <h4 className="build-entry-title">Start my Build Path</h4>
+            <p className="build-entry-copy">
+              Turn your scoped first version into a series of focused 60-minute build sessions.
+            </p>
+          </div>
+          <div className="build-entry-action">
+            <button
+              type="button"
+              className="btn-primary-action btn-build-entry"
+              onClick={() => navigate('/build')}
+              aria-label="Start my Build Path"
+            >
+              <span>Start my Build Path</span>
+              <span className="btn-arrow" aria-hidden="true">→</span>
+            </button>
           </div>
         </div>
       </section>

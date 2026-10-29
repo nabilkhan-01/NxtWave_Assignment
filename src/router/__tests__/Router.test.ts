@@ -5,12 +5,14 @@ describe('Router path normalization', () => {
   it('normalizes standard route paths correctly', () => {
     expect(normalizePath('/')).toBe('/');
     expect(normalizePath('/diagnose')).toBe('/diagnose');
+    expect(normalizePath('/build')).toBe('/build');
     expect(normalizePath('/growth')).toBe('/growth');
     expect(normalizePath('/campaign')).toBe('/campaign');
   });
 
   it('normalizes trailing slashes cleanly', () => {
     expect(normalizePath('/diagnose/')).toBe('/diagnose');
+    expect(normalizePath('/build/')).toBe('/build');
     expect(normalizePath('/growth/')).toBe('/growth');
     expect(normalizePath('/campaign/')).toBe('/campaign');
   });
@@ -23,6 +25,7 @@ describe('Router path normalization', () => {
 
   it('handles hash-based routes for static hosting compatibility', () => {
     expect(normalizePath('#/diagnose')).toBe('/diagnose');
+    expect(normalizePath('#/build')).toBe('/build');
     expect(normalizePath('#/growth')).toBe('/growth');
     expect(normalizePath('#/campaign')).toBe('/campaign');
     expect(normalizePath('#/')).toBe('/');

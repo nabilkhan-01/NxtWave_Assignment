@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage';
 import { DiagnosePage } from './pages/DiagnosePage';
 import { GrowthToolkitPage } from './pages/GrowthToolkitPage';
 import { CampaignModelPage } from './pages/CampaignModelPage';
+import { BuildPathPage } from './pages/BuildPathPage';
 import './App.css';
 
 const AppContent: React.FC = () => {
@@ -22,6 +23,8 @@ const AppContent: React.FC = () => {
         return <HomePage />;
       case '/diagnose':
         return <DiagnosePage attribution={attribution} />;
+      case '/build':
+        return <BuildPathPage />;
       case '/growth':
         return <GrowthToolkitPage />;
       case '/campaign':

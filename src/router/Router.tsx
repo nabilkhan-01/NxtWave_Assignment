@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type AppRoute = '/' | '/diagnose' | '/growth' | '/campaign';
+export type AppRoute = '/' | '/diagnose' | '/build' | '/growth' | '/campaign';
 
 interface RouterContextType {
   currentRoute: AppRoute;
@@ -31,7 +31,7 @@ export function normalizePath(path: string): AppRoute {
     clean = clean.slice(0, -1);
   }
 
-  if (clean === '/diagnose' || clean === '/growth' || clean === '/campaign') {
+  if (clean === '/diagnose' || clean === '/build' || clean === '/growth' || clean === '/campaign') {
     return clean;
   }
   return '/';

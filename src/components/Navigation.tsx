@@ -8,6 +8,7 @@ export const Navigation: React.FC = () => {
   const navLinks: Array<{ to: AppRoute; label: string }> = [
     { to: '/', label: 'Home' },
     { to: '/diagnose', label: 'Diagnose' },
+    { to: '/build', label: 'Build Path' },
     { to: '/growth', label: 'Campus Distribution' },
     { to: '/campaign', label: '500 Registration Plan' }
   ];

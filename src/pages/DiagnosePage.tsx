@@ -3,6 +3,7 @@ import { PROJECT_PRESETS } from '../data/presets';
 import { ProjectPreset, ScopeAssessmentResult } from '../types';
 import { assessScope } from '../logic/assessment';
 import { AttributionParams } from '../logic/attribution';
+import { saveAssessmentForBuildPath, loadAssessmentForBuildPath } from '../logic/buildPath';
 import { PresetSelector } from '../components/PresetSelector';
 import { ProjectInput } from '../components/ProjectInput';
 import { AssessmentResults } from '../components/AssessmentResults';
@@ -12,10 +13,31 @@ interface DiagnosePageProps {
 }
 
 export const DiagnosePage: React.FC<DiagnosePageProps> = ({ attribution }) => {
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(PROJECT_PRESETS[0].id);
-  const [mode, setMode] = useState<'preset' | 'custom'>('preset');
-  const [projectDescription, setProjectDescription] = useState<string>(PROJECT_PRESETS[0].fullDescription);
-  const [assessmentResult, setAssessmentResult] = useState<ScopeAssessmentResult | null>(null);
+  const initialStored = typeof window !== 'undefined' ? loadAssessmentForBuildPath() : null;
+
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(() => {
+    if (!initialStored) return PROJECT_PRESETS[0].id;
+    if (initialStored.presetTitle) {
+      const match = PROJECT_PRESETS.find((p) => p.title === initialStored.presetTitle);
+      return match ? match.id : null;
+    }
+    return null;
+  });
+
+  const [mode, setMode] = useState<'preset' | 'custom'>(() => {
+    if (!initialStored) return 'preset';
+    return initialStored.presetTitle ? 'preset' : 'custom';
+  });
+
+  const [projectDescription, setProjectDescription] = useState<string>(() => {
+    if (!initialStored) return PROJECT_PRESETS[0].fullDescription;
+    return initialStored.projectDescription || PROJECT_PRESETS[0].fullDescription;
+  });
+
+  const [assessmentResult, setAssessmentResult] = useState<ScopeAssessmentResult | null>(() => {
+    return initialStored ? initialStored.assessmentResult : null;
+  });
+
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const inputSectionRef = useRef<HTMLDivElement>(null);
@@ -63,6 +85,13 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ attribution }) => {
     setValidationError(null);
     const result = assessScope(trimmed);
     setAssessmentResult(result);
+
+    // Persist assessment for Build Path and page reloads
+    saveAssessmentForBuildPath({
+      projectDescription: trimmed,
+      presetTitle: mode === 'preset' ? currentPreset?.title : undefined,
+      assessmentResult: result
+    });
 
     setTimeout(() => {
       resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });

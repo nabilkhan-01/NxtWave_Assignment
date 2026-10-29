@@ -455,7 +455,7 @@ async function runQA() {
     console.log('\n--- Auditing Page 3: Campus Distribution (/growth) ---');
 
     // Click Campus Distribution in navbar
-    await evalExpr('document.querySelectorAll(".nav-link")[2]?.click()');
+    await evalExpr('document.querySelector("a[href=\\"/growth\\"]")?.click() || document.querySelectorAll(".nav-link")[3]?.click()');
     await new Promise((r) => setTimeout(r, 400));
 
     // Verify route
@@ -535,7 +535,7 @@ async function runQA() {
     console.log('\n--- Auditing Page 4: 500 Registration Plan (/campaign) ---');
 
     // Click 500 Registration Plan in navbar
-    await evalExpr('document.querySelectorAll(".nav-link")[3]?.click()');
+    await evalExpr('document.querySelector("a[href=\\"/campaign\\"]")?.click() || document.querySelectorAll(".nav-link")[4]?.click()');
     await new Promise((r) => setTimeout(r, 400));
 
     // Verify route and top summary banner
@@ -685,7 +685,7 @@ async function runQA() {
       await new Promise((r) => setTimeout(r, 400));
       const targetPath = await evalExpr('window.location.pathname');
 
-      if (isDrawerOpen && mobileLinks === 4 && targetPath === '/') {
+      if (isDrawerOpen && mobileLinks === 5 && targetPath === '/') {
         logPass(30, 'Responsive mobile navigation drawer', 'Drawer opens on tap and navigates cleanly');
       } else {
         throw new Error(`Mobile drawer failed: open=${isDrawerOpen}, links=${mobileLinks}, target=${targetPath}`);
@@ -786,6 +786,126 @@ async function runQA() {
       }
     } catch (e) {
       logFail(33, 'Mobile 375px Share Sheet', e);
+    }
+
+    // Build Path Empty State (Scenario 34)
+    try {
+      await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+      // Clear localStorage to simulate fresh user navigating directly to /build
+      await evalExpr('localStorage.clear()');
+      await send('Page.navigate', { url: 'http://127.0.0.1:4173/build' });
+      await new Promise((r) => setTimeout(r, 600));
+
+      const emptyTitle = await evalExpr('document.querySelector(".empty-state-title")?.innerText');
+      const emptyActionBtn = await evalExpr('Boolean(document.querySelector(".empty-state-actions button"))');
+      const pageHeadline = await evalExpr('document.querySelector(".page-headline")?.innerText');
+
+      if (emptyTitle?.includes('No evaluated project') && pageHeadline?.includes('Start with your project idea') && emptyActionBtn) {
+        logPass(34, 'Build Path Empty State when accessed without assessment', 'Clean empty state with prompt to evaluate idea on Diagnose');
+      } else {
+        throw new Error(`Build Path empty state failed: title=${emptyTitle}, headline=${pageHeadline}`);
+      }
+    } catch (e) {
+      logFail(34, 'Build Path Empty State', e);
+    }
+
+    // Diagnose -> Start Build Path Transition (Scenario 35)
+    try {
+      await send('Page.navigate', { url: 'http://127.0.0.1:4173/diagnose' });
+      await new Promise((r) => setTimeout(r, 600));
+
+      // Click Assess Scope button
+      await evalExpr('document.querySelector(".section-input-workbench button.btn-primary")?.click()');
+      await new Promise((r) => setTimeout(r, 600));
+
+      // Click "Start my Build Path" CTA button
+      const hasBuildCTA = await evalExpr('Boolean(document.querySelector(".btn-build-entry"))');
+      if (!hasBuildCTA) throw new Error('Start my Build Path CTA button not found on Diagnose result');
+
+      await evalExpr('document.querySelector(".btn-build-entry")?.click()');
+      await new Promise((r) => setTimeout(r, 400));
+
+      const currentPath = await evalExpr('window.location.pathname');
+      const activeProjectTitle = await evalExpr('document.querySelector(".build-project-title")?.innerText');
+      const stageCount = await evalExpr('document.querySelectorAll(".build-stage-card").length');
+      const progressFraction = await evalExpr('document.querySelector(".progress-fraction")?.innerText');
+
+      if (currentPath === '/build' && activeProjectTitle && stageCount >= 3 && progressFraction?.includes('0 of')) {
+        logPass(35, 'Diagnose to Build Path Transition & Stage Generation', `Routed to /build with project "${activeProjectTitle}", generated ${stageCount} personalized stages`);
+      } else {
+        throw new Error(`Build Path transition failed: path=${currentPath}, title=${activeProjectTitle}, stages=${stageCount}, progress=${progressFraction}`);
+      }
+
+      // Capture Build Path screenshots
+      await captureView('page-build-desktop.png', 1440, 900, false);
+      await captureView('page-build-mobile.png', 375, 812, true);
+      await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+    } catch (e) {
+      logFail(35, 'Diagnose to Build Path Transition', e);
+    }
+
+    // Step Verification & Progress Tracking (Scenario 36)
+    try {
+      // Stage 1 should be active initially
+      const stage1Active = await evalExpr('document.querySelector(".build-stage-card")?.classList.contains("is-active")');
+
+      // Click "I verified this — continue" on Stage 1
+      await evalExpr('document.querySelector(".build-stage-card.is-active .btn-verify-stage")?.click()');
+      await new Promise((r) => setTimeout(r, 300));
+
+      const progressAfter = await evalExpr('document.querySelector(".progress-fraction")?.innerText');
+      const stage1Completed = await evalExpr('document.querySelector(".build-stage-card")?.classList.contains("is-completed")');
+      const stage2Active = await evalExpr('document.querySelectorAll(".build-stage-card")[1]?.classList.contains("is-active")');
+
+      // Click "Undo completion" to verify undo works
+      await evalExpr('document.querySelector(".btn-undo-verification")?.click()');
+      await new Promise((r) => setTimeout(r, 300));
+
+      const progressAfterUndo = await evalExpr('document.querySelector(".progress-fraction")?.innerText');
+
+      // Re-verify stage 1
+      await evalExpr('document.querySelector(".build-stage-card.is-active .btn-verify-stage")?.click()');
+      await new Promise((r) => setTimeout(r, 300));
+
+      if (stage1Active && progressAfter?.includes('1 of') && stage1Completed && stage2Active && progressAfterUndo?.includes('0 of')) {
+        logPass(36, 'Build Path Verification Gate & Progress Persistence', 'Stage 1 verified -> Stage 2 active -> Undo works -> Re-verification succeeds');
+      } else {
+        throw new Error(`Stage verification failed: s1Active=${stage1Active}, pAfter=${progressAfter}, s1Done=${stage1Completed}, s2Active=${stage2Active}, pUndo=${progressAfterUndo}`);
+      }
+    } catch (e) {
+      logFail(36, 'Build Path Verification Gate', e);
+    }
+
+    // Demo Lesson Modal & Mobile 375px Verification (Scenario 37)
+    try {
+      // Open demo lesson modal
+      await evalExpr('document.querySelector(".btn-open-lesson")?.click()');
+      await new Promise((r) => setTimeout(r, 400));
+
+      const isLessonModalOpen = await evalExpr('Boolean(document.querySelector(".demo-lesson-dialog"))');
+      const lessonTitle = await evalExpr('document.querySelector("#lesson-modal-title")?.innerText');
+      const hasWhySection = await evalExpr('Boolean(document.querySelector(".lesson-callout-why"))');
+      const hasCodeSnippet = await evalExpr('Boolean(document.querySelector(".lesson-code-block"))');
+
+      // Close modal via "Back to Build Path"
+      await evalExpr('document.querySelector(".demo-lesson-footer button")?.click()');
+      await new Promise((r) => setTimeout(r, 300));
+
+      const isLessonModalClosed = await evalExpr('!document.querySelector(".demo-lesson-dialog")');
+
+      // Test mobile responsive view at 375px
+      await send('Emulation.setDeviceMetricsOverride', { width: 375, height: 812, deviceScaleFactor: 2, mobile: true });
+      await new Promise((r) => setTimeout(r, 300));
+
+      const mobileOverflow = await checkOverflow();
+
+      if (isLessonModalOpen && lessonTitle && hasWhySection && hasCodeSnippet && isLessonModalClosed && !mobileOverflow.hasOverflow) {
+        logPass(37, 'Demo Lesson Walkthrough Modal & Mobile 375px Responsiveness', `Lesson "${lessonTitle}" opened, teaching points verified, closed, zero overflow at 375px`);
+      } else {
+        throw new Error(`Demo lesson modal check failed: open=${isLessonModalOpen}, title=${lessonTitle}, closed=${isLessonModalClosed}, overflow=${JSON.stringify(mobileOverflow)}`);
+      }
+    } catch (e) {
+      logFail(37, 'Demo Lesson Modal & Mobile Layout', e);
     }
 
     // Network & Console checks
