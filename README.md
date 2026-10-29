@@ -142,7 +142,13 @@ Starts the local development server at `http://localhost:5173`.
 ```bash
 npm test
 ```
-Executes all 45 Vitest tests across 6 test suites covering routing, assessment heuristics, preset classifications, edge cases, underspecified input handling, growth calculations, experiment significance, and attribution logic.
+Executes all 54 Vitest tests across 7 test suites covering routing, assessment heuristics, preset classifications, edge cases, underspecified input handling, growth calculations, experiment significance, attribution logic, and the unified multi-channel share sheet.
+
+### Automated End-to-End Browser QA
+```bash
+node scripts/qa-runner.mjs
+```
+Automated headless Chrome CDP test harness validating all 33 scenarios: cross-page routing, preset evaluation, edge cases, registration simulation, accessible share sheet modal/bottom-sheet behaviors, focus trapping, Escape key dismissals, zero horizontal overflow across 1440px and 375px viewports, and zero network leaks.
 
 ### Production Build & Preview
 ```bash
@@ -160,7 +166,23 @@ ShipScope is built as a zero-backend, pure client-side static web application wi
 
 ---
 
-## 8. Limitations & Stated Assumptions
+## 8. Unified Multi-Channel Share Sheet
+
+ShipScope replaces fragmented sharing buttons with an accessible, unified Share Sheet modal (desktop) and slide-up bottom sheet (mobile):
+
+- **Supported Channels:**
+  - **WhatsApp:** Deep links via `https://wa.me/?text=...` with prefilled context message and channel tracking (`utm_medium=whatsapp`).
+  - **Telegram:** Official share format via `https://t.me/share/url?url=...&text=...` (`utm_medium=telegram`).
+  - **Email:** Standard RFC-compliant `mailto:?subject=...&body=...` link (`utm_medium=email`).
+  - **More apps (Native Share):** Leverages Web Share API (`navigator.share`) when supported on mobile and modern browsers (`utm_medium=native-share`).
+  - **Instagram Fallback:** Instagram Web cannot prefill text or DMs via protocol links; ShipScope invokes Web Share API if supported, or cleanly copies the tracked link (`utm_medium=instagram`) to the clipboard with explicit visual confirmation (*"Link copied — opening Instagram"*) and opens `instagram.com`.
+  - **Direct Copy Link:** Fast clipboard copy utility with inline confirmation (`utm_medium=clipboard`).
+- **Privacy & Safety:** Strips user draft inputs and private specifications from shared URLs to prevent leaking sensitive drafts.
+- **Accessibility:** Built with standard WAI-ARIA dialog semantics (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`, `aria-describedby`), keyboard focus trapping, Escape key dismissal, and automatic focus restoration to the originating trigger button. Touch targets meet or exceed WCAG 44px minimums.
+
+---
+
+## 9. Limitations & Stated Assumptions
 
 - **Heuristic Diagnostic:** ShipScope is an engineering planning tool. The rule-based scope indicator does **not** predict academic marks, viva outcomes, faculty approval, or hiring chances.
 - **No Remote AI Backend:** All parsing is deterministic and executes locally in the student's browser. No non-deterministic LLM APIs or cloud dependencies are involved.

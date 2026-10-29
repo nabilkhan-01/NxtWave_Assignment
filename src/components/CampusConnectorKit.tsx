@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ConnectorSourceType,
   MessageVariant,
   SOURCE_TYPES,
   sanitizeSourceLabel,
   buildConnectorUrl,
-  buildConnectorMessage,
-  buildConnectorWhatsAppUrl
+  buildConnectorMessage
 } from '../logic/connectorKit';
+import { ShareSheet } from './ShareSheet';
+import { ShareContextConfig } from '../logic/shareSheet';
 
 export const CampusConnectorKit: React.FC = () => {
   const [sourceType, setSourceType] = useState<ConnectorSourceType>('class-rep');
@@ -15,14 +16,23 @@ export const CampusConnectorKit: React.FC = () => {
   const [variant, setVariant] = useState<MessageVariant>('scope-hook');
   const [copyMsgStatus, setCopyMsgStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const [copyLinkStatus, setCopyLinkStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+  const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
+  const shareCampaignBtnRef = useRef<HTMLButtonElement | null>(null);
 
   // Base URL from current browser window (fallback for tests/SSR)
   const baseLocation = typeof window !== 'undefined' ? window.location.href : 'https://shipscope.dev';
 
   const campaignUrl = buildConnectorUrl(baseLocation, sourceType, sourceLabel, variant);
   const messageText = buildConnectorMessage(variant, campaignUrl);
-  const whatsappUrl = buildConnectorWhatsAppUrl(variant, campaignUrl);
   const sanitizedSlug = sanitizeSourceLabel(sourceLabel);
+
+  const shareConfig: ShareContextConfig = {
+    context: 'connector',
+    baseLocation,
+    sourceType,
+    sourceLabel,
+    variant
+  };
 
   const handleCopyMessage = async () => {
     try {
@@ -179,11 +189,23 @@ export const CampusConnectorKit: React.FC = () => {
               <pre className="message-text">{messageText}</pre>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons: Unified Primary Share + Secondary Utilities */}
             <div className="connector-actions-bar">
               <button
+                ref={shareCampaignBtnRef}
                 type="button"
-                className="btn-primary btn-copy"
+                className="btn-primary btn-share-campaign"
+                onClick={() => setIsShareSheetOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={isShareSheetOpen}
+              >
+                <span className="btn-icon" aria-hidden="true">↗</span>
+                <span>Share campaign message</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn-secondary btn-copy"
                 onClick={handleCopyMessage}
                 aria-live="polite"
               >
@@ -198,17 +220,6 @@ export const CampusConnectorKit: React.FC = () => {
               >
                 <span>{copyLinkStatus === 'copied' ? '✓ Link Copied' : 'Copy Link'}</span>
               </button>
-
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary btn-whatsapp"
-                aria-label="Open WhatsApp with pre-filled message"
-              >
-                <span>Open WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </a>
             </div>
 
             {/* Tracking details in a small expandable */}
@@ -230,6 +241,16 @@ export const CampusConnectorKit: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Unified Share Sheet Modal / Bottom Sheet */}
+      <ShareSheet
+        isOpen={isShareSheetOpen}
+        onClose={() => setIsShareSheetOpen(false)}
+        triggerRef={shareCampaignBtnRef}
+        config={shareConfig}
+        title="Share Campaign Message"
+        subtitle="Choose where you want to send this outreach message."
+      />
     </section>
   );
 };

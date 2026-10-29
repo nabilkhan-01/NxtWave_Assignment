@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   AttributionParams,
-  buildShareUrl,
-  buildWhatsAppUrl
+  buildShareUrl
 } from '../logic/attribution';
+import { ShareSheet } from './ShareSheet';
+import { ShareContextConfig } from '../logic/shareSheet';
 
 interface WorkshopCTAProps {
   presetTitle?: string;
@@ -16,10 +17,18 @@ export const WorkshopCTA: React.FC<WorkshopCTAProps> = ({
 }) => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+  const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
 
-  const shareUrl = buildShareUrl(window.location.href, attribution, 'copy');
-  const whatsappShareUrl = buildShareUrl(window.location.href, attribution, 'whatsapp');
-  const whatsappUrl = buildWhatsAppUrl(whatsappShareUrl, presetTitle);
+  const baseLocation = typeof window !== 'undefined' ? window.location.href : 'https://shipscope.dev';
+  const shareUrl = buildShareUrl(baseLocation, attribution, 'copy');
+
+  const shareConfig: ShareContextConfig = {
+    context: 'peer',
+    baseLocation,
+    presetTitle,
+    incomingAttribution: attribution
+  };
 
   const handleSimulateRegistration = () => {
     setIsRegistered(true);
@@ -136,21 +145,22 @@ export const WorkshopCTA: React.FC<WorkshopCTAProps> = ({
           <div className="sharing-label-group">
             <span className="sharing-title">Share with a teammate</span>
             <span className="sharing-subtitle">
-              Optional peer link — helps your project partner review and narrow their scope too.
+              Send this scoping plan to your project partner via WhatsApp, Telegram, Email, or more apps.
             </span>
           </div>
 
           <div className="sharing-actions-row">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="share-btn share-btn-whatsapp"
-              aria-label="Share ShipScope via WhatsApp"
+            <button
+              ref={shareButtonRef}
+              type="button"
+              className="btn-primary share-btn-main"
+              onClick={() => setIsShareSheetOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={isShareSheetOpen}
             >
-              <span className="share-icon" aria-hidden="true">💬</span>
-              <span>WhatsApp</span>
-            </a>
+              <span className="btn-icon" aria-hidden="true">↗</span>
+              <span>Share with a teammate</span>
+            </button>
 
             <button
               type="button"
@@ -164,6 +174,16 @@ export const WorkshopCTA: React.FC<WorkshopCTAProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Unified Share Sheet Modal / Bottom Sheet */}
+      <ShareSheet
+        isOpen={isShareSheetOpen}
+        onClose={() => setIsShareSheetOpen(false)}
+        triggerRef={shareButtonRef}
+        config={shareConfig}
+        title="Share with a teammate"
+        subtitle="Choose where to send your project scope plan."
+      />
     </section>
   );
 };
